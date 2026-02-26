@@ -36,7 +36,6 @@ class ErrorState extends StatelessWidget {
               const SizedBox(height: 16),
               NeoBrutalButton(
                 label: 'Thử lại',
-                icon: LucideIcons.refreshCw,
                 backgroundColor: AppColors.blue,
                 onPressed: onRetry,
               ),

@@ -16,6 +16,7 @@ class StepDetails extends StatelessWidget {
   final List<String> selectedAmenities;
   final ValueChanged<List<String>> onAmenitiesChanged;
   final Map<String, TextEditingController> costControllers;
+  final Widget bottomActions;
 
   const StepDetails({
     super.key,
@@ -30,6 +31,7 @@ class StepDetails extends StatelessWidget {
     required this.selectedAmenities,
     required this.onAmenitiesChanged,
     required this.costControllers,
+    required this.bottomActions,
   });
 
   @override
@@ -53,7 +55,7 @@ class StepDetails extends StatelessWidget {
 
           // Images
           const Text(
-            'Hình ảnh (tối đa 5)',
+            'Hình ảnh * (tối đa 5)',
             style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
@@ -102,7 +104,7 @@ class StepDetails extends StatelessWidget {
 
           // Amenities
           const Text(
-            'Tiện ích',
+            'Tiện ích *',
             style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
@@ -185,7 +187,9 @@ class StepDetails extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
+          bottomActions,
+          const SizedBox(height: 20),
         ],
       ),
     );

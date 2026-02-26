@@ -261,7 +261,6 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
             // Submit
             NeoBrutalButton(
               label: 'Đăng bài',
-              icon: LucideIcons.send,
               backgroundColor: AppColors.emerald,
               expanded: true,
               isLoading: _isSubmitting,

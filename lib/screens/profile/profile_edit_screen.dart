@@ -142,7 +142,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
                 NeoBrutalButton(
                   label: 'Lưu thay đổi',
-                  icon: LucideIcons.check,
                   backgroundColor: AppColors.blue,
                   expanded: true,
                   isLoading: _isLoading,

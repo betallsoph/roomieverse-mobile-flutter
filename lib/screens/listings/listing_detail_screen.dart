@@ -326,7 +326,6 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                       if (listing.phone.isNotEmpty)
                         NeoBrutalButton(
                           label: listing.phone,
-                          icon: LucideIcons.phone,
                           backgroundColor: AppColors.emeraldLight,
                           expanded: true,
                           onPressed: () => _launchUrl('tel:${listing.phone}'),
@@ -335,7 +334,6 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                         const SizedBox(height: 8),
                         NeoBrutalButton(
                           label: 'Zalo: ${listing.zalo}',
-                          icon: LucideIcons.messageCircle,
                           backgroundColor: AppColors.blueLight,
                           expanded: true,
                           onPressed: () => _launchUrl('https://zalo.me/${listing.zalo}'),

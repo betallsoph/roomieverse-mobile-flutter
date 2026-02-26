@@ -85,26 +85,13 @@ class ProfileScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () => context.push('/profile/edit'),
-                    child: Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.black, width: 2),
-                      ),
-                      child: const Icon(LucideIcons.pencil, size: 16),
-                    ),
-                  ),
                 ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // Profile details from Firestore
+            // Profile details
             profileAsync.when(
               data: (profile) {
                 if (profile == null) {
@@ -135,65 +122,34 @@ class ProfileScreen extends ConsumerWidget {
               error: (_, __) => const SizedBox.shrink(),
             ),
 
-            const SizedBox(height: 8),
-
-            // Lifestyle shortcut
-            NeoBrutalCard(
-              backgroundColor: AppColors.pinkLight,
-              onTap: () => context.push('/profile/lifestyle'),
-              padding: const EdgeInsets.all(14),
-              child: const Row(
-                children: [
-                  Icon(LucideIcons.sparkles, size: 20, color: AppColors.textSecondary),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Hồ sơ lối sống',
-                          style: TextStyle(
-                            fontFamily: 'Google Sans',
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          'Chia sẻ thói quen để match tốt hơn',
-                          style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(LucideIcons.chevronRight, size: 18, color: AppColors.textTertiary),
-                ],
-              ),
-            ),
-
             const SizedBox(height: 20),
 
             // Menu items
             _MenuItem(
-              icon: LucideIcons.fileText,
+              label: 'Cập nhật hồ sơ',
+              onTap: () => context.push('/profile/edit'),
+            ),
+            _MenuItem(
+              label: 'Hồ sơ lối sống',
+              onTap: () => context.push('/profile/lifestyle'),
+            ),
+            _MenuItem(
+              label: 'Yêu thích',
+              onTap: () => context.push('/favorites'),
+            ),
+            _MenuItem(
               label: 'Tin đã đăng',
               onTap: () => context.push('/profile/listings'),
             ),
             _MenuItem(
-              icon: LucideIcons.settings,
               label: 'Cài đặt',
               onTap: () => context.push('/settings'),
             ),
-            _MenuItem(
-              icon: LucideIcons.helpCircle,
-              label: 'Trợ giúp',
-              onTap: () => context.push('/settings'),
-            ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
             NeoBrutalButton(
               label: 'Đăng xuất',
-              icon: LucideIcons.logOut,
               backgroundColor: AppColors.red,
               expanded: true,
               onPressed: () async {
@@ -220,7 +176,6 @@ class _AuthPrompt extends StatelessWidget {
             const SizedBox(height: 32),
             NeoBrutalButton(
               label: 'Đăng nhập / Đăng ký',
-              icon: LucideIcons.logIn,
               backgroundColor: AppColors.blueLight,
               expanded: true,
               fontSize: 16,
@@ -327,12 +282,10 @@ class _ProfileDetails extends StatelessWidget {
 }
 
 class _MenuItem extends StatelessWidget {
-  final IconData icon;
   final String label;
   final VoidCallback onTap;
 
   const _MenuItem({
-    required this.icon,
     required this.label,
     required this.onTap,
   });
@@ -348,8 +301,6 @@ class _MenuItem extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppColors.textSecondary),
-            const SizedBox(width: 14),
             Text(
               label,
               style: const TextStyle(

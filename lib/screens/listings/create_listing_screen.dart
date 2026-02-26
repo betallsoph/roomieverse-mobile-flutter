@@ -111,42 +111,117 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   bool _validateCurrentStep() {
-    switch (_currentStep) {
-      case 0: // Basic Info
-        if (_titleController.text.trim().isEmpty) {
-          _showError('Vui lòng nhập tiêu đề');
-          return false;
-        }
-        if (_selectedCity == null) {
-          _showError('Vui lòng chọn thành phố');
-          return false;
-        }
-        if (_selectedDistrict == null) {
-          _showError('Vui lòng chọn quận/huyện');
-          return false;
-        }
-        if (_priceController.text.trim().isEmpty) {
-          _showError('Vui lòng nhập giá');
-          return false;
-        }
-        if (_category == 'roommate' && _roommateType == null) {
-          _showError('Vui lòng chọn loại tin');
-          return false;
-        }
-        return true;
-      case 1: // Details (only for have-room)
-        return true; // optional fields
-      case 2: // Preferences
-        return true; // optional
-      case 3: // Contact
-        if (_phoneController.text.trim().isEmpty) {
-          _showError('Vui lòng nhập số điện thoại');
-          return false;
-        }
-        return true;
-      default:
-        return true;
+    final skipDetails = _category == 'roommate' && _roommateType == 'find-partner';
+    final actualStep = _currentStep;
+
+    // Map step index to logical step based on whether details is skipped
+    // With details: 0=Basic, 1=Details, 2=Preferences, 3=Contact
+    // Without details: 0=Basic, 1=Preferences, 2=Contact
+    if (actualStep == 0) {
+      return _validateBasicInfo();
+    } else if (!skipDetails && actualStep == 1) {
+      return _validateDetails();
+    } else if ((!skipDetails && actualStep == 2) || (skipDetails && actualStep == 1)) {
+      return _validatePreferences();
+    } else {
+      return _validateContact();
     }
+  }
+
+  bool _validateBasicInfo() {
+    if (_category == 'roommate' && _roommateType == null) {
+      _showError('Vui lòng chọn loại tin');
+      return false;
+    }
+    if (_titleController.text.trim().isEmpty) {
+      _showError('Vui lòng nhập tiêu đề');
+      return false;
+    }
+    if (_introController.text.trim().isEmpty) {
+      _showError('Vui lòng nhập giới thiệu');
+      return false;
+    }
+    if (_selectedCity == null || _selectedDistrict == null) {
+      _showError('Vui lòng điền đầy đủ địa chỉ');
+      return false;
+    }
+    if (_selectedPropertyTypes.isEmpty) {
+      _showError('Vui lòng chọn loại hình nhà ở');
+      return false;
+    }
+    if (_priceController.text.trim().isEmpty) {
+      _showError('Vui lòng nhập giá');
+      return false;
+    }
+    final isHaveRoom = _category == 'roommate' && _roommateType == 'have-room';
+    if (!isHaveRoom && _moveInController.text.trim().isEmpty && !_timeNegotiable) {
+      _showError('Vui lòng nhập thời gian dọn vào hoặc chọn "Linh hoạt"');
+      return false;
+    }
+    if (_category == 'roomshare') {
+      if (_roomSizeController.text.trim().isEmpty) {
+        _showError('Vui lòng nhập diện tích phòng');
+        return false;
+      }
+      if (_occupantsController.text.trim().isEmpty) {
+        _showError('Vui lòng nhập số người hiện tại');
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool _validateDetails() {
+    if (_imagePaths.isEmpty) {
+      _showError('Vui lòng tải lên ít nhất 1 hình ảnh');
+      return false;
+    }
+    if (_selectedAmenities.isEmpty) {
+      _showError('Vui lòng chọn ít nhất 1 tiện ích');
+      return false;
+    }
+    return true;
+  }
+
+  bool _validatePreferences() {
+    if (_prefGender.isEmpty) {
+      _showError('Vui lòng chọn giới tính mong muốn');
+      return false;
+    }
+    if (_prefStatus.isEmpty) {
+      _showError('Vui lòng chọn tình trạng mong muốn');
+      return false;
+    }
+    if (_prefSchedule.isEmpty) {
+      _showError('Vui lòng chọn giờ giấc');
+      return false;
+    }
+    if (_prefHabits.isEmpty) {
+      _showError('Vui lòng chọn thói quen');
+      return false;
+    }
+    if (_prefPets.isEmpty) {
+      _showError('Vui lòng chọn về thú cưng');
+      return false;
+    }
+    if (_prefMoveInTime.isEmpty) {
+      _showError('Vui lòng chọn thời gian dọn vào');
+      return false;
+    }
+    return true;
+  }
+
+  bool _validateContact() {
+    if (_phoneController.text.trim().isEmpty) {
+      _showError('Vui lòng nhập số điện thoại');
+      return false;
+    }
+    final phone = _phoneController.text.trim();
+    if (phone.length < 9 || phone.length > 11) {
+      _showError('Số điện thoại không hợp lệ');
+      return false;
+    }
+    return true;
   }
 
   void _showError(String msg) {
@@ -183,8 +258,17 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     }
   }
 
+  bool _validateAllSteps() {
+    if (!_validateBasicInfo()) return false;
+    final skipDetails = _category == 'roommate' && _roommateType == 'find-partner';
+    if (!skipDetails && !_validateDetails()) return false;
+    if (!_validatePreferences()) return false;
+    if (!_validateContact()) return false;
+    return true;
+  }
+
   Future<void> _submit() async {
-    if (!_validateCurrentStep()) return;
+    if (!_validateAllSteps()) return;
 
     setState(() => _isSubmitting = true);
 
@@ -323,11 +407,43 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     );
   }
 
+  Widget _buildNavButtons(bool isLast) {
+    final bottom = MediaQueryData.fromView(WidgetsBinding.instance.platformDispatcher.views.first).padding.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(0, 0, 0, bottom > 0 ? 8 : 0),
+      child: Row(
+        children: [
+          if (_currentStep > 0)
+            Expanded(
+              child: NeoBrutalButton(
+                label: 'Quay lại',
+                backgroundColor: Colors.white,
+                onPressed: _prevStep,
+              ),
+            ),
+          if (_currentStep > 0) const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: NeoBrutalButton(
+              label: isLast ? 'Đăng tin' : 'Tiếp tục',
+              backgroundColor: isLast ? AppColors.emerald : AppColors.blue,
+              expanded: true,
+              isLoading: _isSubmitting,
+              onPressed: _isSubmitting ? null : (isLast ? _submit : _nextStep),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _buildStepPages() {
     final skipDetails = _category == 'roommate' && _roommateType == 'find-partner';
+    final totalSteps = _totalSteps;
+
+    Widget navFor(int stepIndex) => _buildNavButtons(stepIndex == totalSteps - 1);
 
     final pages = <Widget>[
-      // Step 1: Basic info (always)
       StepBasicInfo(
         category: _category,
         roommateType: _roommateType,
@@ -348,10 +464,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         onLocationNegotiableChanged: (v) => setState(() => _locationNegotiable = v),
         timeNegotiable: _timeNegotiable,
         onTimeNegotiableChanged: (v) => setState(() => _timeNegotiable = v),
+        bottomActions: navFor(0),
       ),
     ];
 
-    // Step 2: Details (skip for find-partner)
     if (!skipDetails) {
       pages.add(StepDetails(
         imagePaths: _imagePaths,
@@ -365,10 +481,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         selectedAmenities: _selectedAmenities,
         onAmenitiesChanged: (v) => setState(() => _selectedAmenities = v),
         costControllers: _costControllers,
+        bottomActions: navFor(1),
       ));
     }
 
-    // Step 3: Preferences
+    final prefStep = skipDetails ? 1 : 2;
     pages.add(StepPreferences(
       selectedGender: _prefGender,
       onGenderChanged: (v) => setState(() => _prefGender = v),
@@ -385,9 +502,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       selectedMoveInTime: _prefMoveInTime,
       onMoveInTimeChanged: (v) => setState(() => _prefMoveInTime = v),
       otherController: _prefOtherController,
+      bottomActions: navFor(prefStep),
     ));
 
-    // Step 4: Contact
+    final contactStep = skipDetails ? 2 : 3;
     pages.add(StepContact(
       phoneController: _phoneController,
       zaloController: _zaloController,
@@ -398,6 +516,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         _sameAsPhone = v;
         if (v) _zaloController.text = _phoneController.text;
       }),
+      bottomActions: navFor(contactStep),
     ));
 
     return pages;
@@ -456,41 +575,6 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
         children: _buildStepPages(),
-      ),
-      bottomNavigationBar: Container(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(context).padding.bottom + 12),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: Colors.black12)),
-        ),
-        child: Row(
-          children: [
-            if (_currentStep > 0)
-              Expanded(
-                child: NeoBrutalButton(
-                  label: 'Quay lại',
-                  backgroundColor: Colors.white,
-                  onPressed: _prevStep,
-                ),
-              ),
-            if (_currentStep > 0) const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: NeoBrutalButton(
-                label: _currentStep == _totalSteps - 1 ? 'Đăng tin' : 'Tiếp tục',
-                backgroundColor: _currentStep == _totalSteps - 1 ? AppColors.emerald : AppColors.blue,
-                icon: _currentStep == _totalSteps - 1 ? LucideIcons.send : LucideIcons.arrowRight,
-                expanded: true,
-                isLoading: _isSubmitting,
-                onPressed: _isSubmitting
-                    ? null
-                    : _currentStep == _totalSteps - 1
-                        ? _submit
-                        : _nextStep,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

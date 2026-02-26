@@ -129,6 +129,7 @@ class NeoBrutalTextField extends StatelessWidget {
   final String? hint;
   final TextEditingController? controller;
   final int maxLines;
+  final int? maxLength;
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
   final bool obscureText;
@@ -139,6 +140,7 @@ class NeoBrutalTextField extends StatelessWidget {
     this.hint,
     this.controller,
     this.maxLines = 1,
+    this.maxLength,
     this.keyboardType,
     this.onChanged,
     this.obscureText = false,
@@ -171,6 +173,7 @@ class NeoBrutalTextField extends StatelessWidget {
           child: TextField(
             controller: controller,
             maxLines: maxLines,
+            maxLength: maxLength,
             keyboardType: keyboardType,
             onChanged: onChanged,
             obscureText: obscureText,
@@ -186,6 +189,10 @@ class NeoBrutalTextField extends StatelessWidget {
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: InputBorder.none,
+              counterStyle: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textTertiary,
+              ),
             ),
           ),
         ),

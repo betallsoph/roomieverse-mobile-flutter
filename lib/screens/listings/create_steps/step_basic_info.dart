@@ -25,6 +25,7 @@ class StepBasicInfo extends StatelessWidget {
   final ValueChanged<bool> onLocationNegotiableChanged;
   final bool timeNegotiable;
   final ValueChanged<bool> onTimeNegotiableChanged;
+  final Widget bottomActions;
 
   const StepBasicInfo({
     super.key,
@@ -47,6 +48,7 @@ class StepBasicInfo extends StatelessWidget {
     required this.onLocationNegotiableChanged,
     required this.timeNegotiable,
     required this.onTimeNegotiableChanged,
+    required this.bottomActions,
   });
 
   @override
@@ -78,40 +80,78 @@ class StepBasicInfo extends StatelessWidget {
               'Bạn muốn gì? *',
               style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: 8),
-            ...roommateTypeOptions.map((opt) {
-              final isSelected = roommateType == opt.$1;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: NeoBrutalCard(
-                  backgroundColor: isSelected ? AppColors.blue.withValues(alpha: 0.3) : Colors.white,
-                  onTap: () => onRoommateTypeChanged(opt.$1),
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
-                    children: [
-                      Icon(
-                        opt.$1 == 'have-room' ? LucideIcons.home : LucideIcons.search,
-                        size: 20,
-                        color: Colors.black,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          opt.$2,
-                          style: TextStyle(
-                            fontFamily: 'Google Sans',
-                            fontSize: 14,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            const SizedBox(height: 10),
+            Row(
+              children: roommateTypeOptions.map((opt) {
+                final isSelected = roommateType == opt.$1;
+                final isHaveRoom = opt.$1 == 'have-room';
+                const accentColor = Color(0xFF3B82F6);
+                const bgColor = Color(0xFFEFF6FF);
+
+                return Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: isHaveRoom ? 6 : 0,
+                      left: isHaveRoom ? 0 : 6,
+                    ),
+                    child: GestureDetector(
+                      onTap: () => onRoommateTypeChanged(opt.$1),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: isSelected ? bgColor : Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isSelected ? accentColor : const Color(0xFFE5E7EB),
+                            width: isSelected ? 2 : 1,
                           ),
                         ),
+                        child: Column(
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? accentColor.withValues(alpha: 0.15)
+                                    : const Color(0xFFF4F4F5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                isHaveRoom ? LucideIcons.home : LucideIcons.search,
+                                size: 20,
+                                color: isSelected ? accentColor : AppColors.textTertiary,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              isHaveRoom ? 'Có phòng sẵn' : 'Chưa có phòng',
+                              style: TextStyle(
+                                fontFamily: 'Google Sans',
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: isSelected ? accentColor : AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isHaveRoom ? 'Tìm bạn ở cùng' : 'Tìm bạn cùng thuê',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      if (isSelected) const Icon(LucideIcons.check, size: 18, color: AppColors.blueDark),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            }),
-            const SizedBox(height: 8),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 14),
           ],
 
           // Title
@@ -119,12 +159,13 @@ class StepBasicInfo extends StatelessWidget {
             label: 'Tiêu đề *',
             hint: 'VD: Tìm bạn ở ghép quận 7, gần Lotte',
             controller: titleController,
+            maxLength: 80,
           ),
           const SizedBox(height: 14),
 
           // Introduction
           NeoBrutalTextField(
-            label: 'Giới thiệu',
+            label: 'Giới thiệu *',
             hint: 'Viết mô tả ngắn về bản thân hoặc phòng...',
             controller: introController,
             maxLines: 4,
@@ -133,7 +174,7 @@ class StepBasicInfo extends StatelessWidget {
 
           // Property types
           const Text(
-            'Loại hình',
+            'Loại hình *',
             style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
@@ -230,7 +271,9 @@ class StepBasicInfo extends StatelessWidget {
             onChanged: onTimeNegotiableChanged,
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
+          bottomActions,
+          const SizedBox(height: 20),
         ],
       ),
     );

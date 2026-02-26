@@ -98,11 +98,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
     final name = _nameController.text.trim();
 
     if (email.isEmpty || (_mode != 2 && password.isEmpty)) {
-      setState(() => _error = 'Vui lòng điền đầy đủ thông tin.');
+      setState(() => _error = 'Vui lòng nhập đầy đủ email và mật khẩu.');
       return;
     }
     if (_mode == 1 && name.isEmpty) {
       setState(() => _error = 'Vui lòng nhập tên hiển thị.');
+      return;
+    }
+    if (_mode == 1 && password.length < 6) {
+      setState(() => _error = 'Mật khẩu phải có ít nhất 6 ký tự.');
       return;
     }
 

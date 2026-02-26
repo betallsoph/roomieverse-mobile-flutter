@@ -19,8 +19,10 @@ class FavoritesScreen extends ConsumerWidget {
     final user = authState.valueOrNull;
 
     if (user == null) {
-      return SafeArea(
-        child: Center(
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(title: const Text('Yêu thích')),
+        body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -49,60 +51,43 @@ class FavoritesScreen extends ConsumerWidget {
     final favoriteIds = ref.watch(favoritesNotifierProvider);
     final listingsAsync = ref.watch(listingsProvider);
 
-    return SafeArea(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Text(
-              'Yêu thích',
-              style: TextStyle(
-                fontFamily: 'Google Sans',
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(title: const Text('Yêu thích')),
+      body: listingsAsync.when(
+        data: (allListings) {
+          final favListings = allListings
+              .where((l) => favoriteIds.contains(l.id))
+              .toList();
+          if (favListings.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.favorite_border, size: 48, color: AppColors.textTertiary),
+                  SizedBox(height: 12),
+                  Text(
+                    'Chưa có tin yêu thích',
+                    style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                  ),
+                ],
               ),
-            ),
-          ),
-          Expanded(
-            child: listingsAsync.when(
-              data: (allListings) {
-                final favListings = allListings
-                    .where((l) => favoriteIds.contains(l.id))
-                    .toList();
-                if (favListings.isEmpty) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.favorite_border, size: 48, color: AppColors.textTertiary),
-                        SizedBox(height: 12),
-                        Text(
-                          'Chưa có tin yêu thích',
-                          style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: favListings.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    return ListingCard(
-                      listing: favListings[index],
-                      onTap: () => context.push('/listing/${favListings[index].id}'),
-                    );
-                  },
-                );
-              },
-              loading: () => const ShimmerListingList(),
-              error: (e, _) => Center(child: Text('Lỗi: $e')),
-            ),
-          ),
-        ],
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: favListings.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              return ListingCard(
+                listing: favListings[index],
+                onTap: () => context.push('/listing/${favListings[index].id}'),
+              );
+            },
+          );
+        },
+        loading: () => const ShimmerListingList(),
+        error: (e, _) => Center(child: Text('Lỗi: $e')),
       ),
     );
   }

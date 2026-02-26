@@ -129,7 +129,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'Tìm phòng',
+                  'Tìm kiếm',
                   style: TextStyle(
                     fontFamily: 'Google Sans',
                     fontSize: 24,
@@ -139,7 +139,6 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
                 ),
                 NeoBrutalButton(
                   label: 'Đăng tin',
-                  icon: LucideIcons.plus,
                   fontSize: 13,
                   onPressed: () => _showCategoryPicker(context),
                 ),
@@ -235,17 +234,20 @@ class _CategoryListings extends ConsumerWidget {
               ],
             );
           }
-          return ListView.separated(
+          return GridView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: listings.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.72,
+            ),
             itemBuilder: (context, index) {
-              return SizedBox(
-                height: 230,
-                child: ListingCard(
-                  listing: listings[index],
-                  onTap: () => context.push('/listing/${listings[index].id}'),
-                ),
+              return ListingCard(
+                listing: listings[index],
+                showCategory: false,
+                onTap: () => context.push('/listing/${listings[index].id}'),
               );
             },
           );

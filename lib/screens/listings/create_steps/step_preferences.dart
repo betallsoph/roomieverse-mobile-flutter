@@ -20,6 +20,7 @@ class StepPreferences extends StatelessWidget {
   final List<String> selectedMoveInTime;
   final ValueChanged<List<String>> onMoveInTimeChanged;
   final TextEditingController otherController;
+  final Widget bottomActions;
 
   const StepPreferences({
     super.key,
@@ -38,6 +39,7 @@ class StepPreferences extends StatelessWidget {
     required this.selectedMoveInTime,
     required this.onMoveInTimeChanged,
     required this.otherController,
+    required this.bottomActions,
   });
 
   void _toggleInList(List<String> current, String value, ValueChanged<List<String>> onChanged) {
@@ -66,7 +68,7 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 24),
 
           // Gender
-          _sectionTitle('Giới tính'),
+          _sectionTitle('Giới tính *'),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -82,7 +84,7 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Status
-          _sectionTitle('Tình trạng'),
+          _sectionTitle('Tình trạng *'),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -98,7 +100,7 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Schedule
-          _sectionTitle('Lịch trình'),
+          _sectionTitle('Lịch trình *'),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -114,7 +116,7 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Cleanliness
-          _sectionTitle('Mức độ sạch sẽ'),
+          _sectionTitle('Mức độ sạch sẽ *'),
           const SizedBox(height: 4),
           NeoBrutalSlider(
             value: cleanlinessLevel,
@@ -125,7 +127,7 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Habits
-          _sectionTitle('Thói quen'),
+          _sectionTitle('Thói quen *'),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -141,7 +143,7 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Pets
-          _sectionTitle('Thú cưng'),
+          _sectionTitle('Thú cưng *'),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -157,7 +159,7 @@ class StepPreferences extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Move-in time
-          _sectionTitle('Thời gian dọn vào'),
+          _sectionTitle('Thời gian dọn vào *'),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -180,7 +182,9 @@ class StepPreferences extends StatelessWidget {
             maxLines: 3,
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
+          bottomActions,
+          const SizedBox(height: 20),
         ],
       ),
     );

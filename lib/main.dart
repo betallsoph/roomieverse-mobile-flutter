@@ -60,11 +60,6 @@ final _router = GoRouter(
               const NoTransitionPage(child: CommunityScreen()),
         ),
         GoRoute(
-          path: '/favorites',
-          pageBuilder: (context, state) =>
-              const NoTransitionPage(child: FavoritesScreen()),
-        ),
-        GoRoute(
           path: '/profile',
           pageBuilder: (context, state) =>
               const NoTransitionPage(child: ProfileScreen()),
@@ -83,6 +78,11 @@ final _router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) =>
           PostDetailScreen(id: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/favorites',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const FavoritesScreen(),
     ),
     GoRoute(
       path: '/auth',
@@ -150,8 +150,7 @@ class AppShell extends StatelessWidget {
     final location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/browse')) return 1;
     if (location.startsWith('/community')) return 2;
-    if (location.startsWith('/favorites')) return 3;
-    if (location.startsWith('/profile')) return 4;
+    if (location.startsWith('/profile')) return 3;
     return 0;
   }
 
@@ -171,50 +170,40 @@ class AppShell extends StatelessWidget {
             ),
           ],
         ),
-        child: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: LucideIcons.home,
-                  activeIcon: LucideIcons.home,
-                  label: 'Trang chủ',
-                  selected: index == 0,
-                  onTap: () => context.go('/'),
-                ),
-                _NavItem(
-                  icon: LucideIcons.search,
-                  activeIcon: LucideIcons.search,
-                  label: 'Tìm phòng',
-                  selected: index == 1,
-                  onTap: () => context.go('/browse'),
-                ),
-                _NavItem(
-                  icon: LucideIcons.users,
-                  activeIcon: LucideIcons.users,
-                  label: 'Cộng đồng',
-                  selected: index == 2,
-                  onTap: () => context.go('/community'),
-                ),
-                _NavItem(
-                  icon: LucideIcons.heart,
-                  activeIcon: LucideIcons.heart,
-                  label: 'Yêu thích',
-                  selected: index == 3,
-                  onTap: () => context.go('/favorites'),
-                ),
-                _NavItem(
-                  icon: LucideIcons.user,
-                  activeIcon: LucideIcons.user,
-                  label: 'Hồ sơ',
-                  selected: index == 4,
-                  onTap: () => context.go('/profile'),
-                ),
-              ],
-            ),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(4, 8, 4, MediaQuery.of(context).padding.bottom > 0 ? 12 : 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _NavItem(
+                icon: LucideIcons.home,
+                activeIcon: LucideIcons.home,
+                label: 'Trang chủ',
+                selected: index == 0,
+                onTap: () => context.go('/'),
+              ),
+              _NavItem(
+                icon: LucideIcons.search,
+                activeIcon: LucideIcons.search,
+                label: 'Tìm kiếm',
+                selected: index == 1,
+                onTap: () => context.go('/browse'),
+              ),
+              _NavItem(
+                icon: LucideIcons.users,
+                activeIcon: LucideIcons.users,
+                label: 'Cộng đồng',
+                selected: index == 2,
+                onTap: () => context.go('/community'),
+              ),
+              _NavItem(
+                icon: LucideIcons.user,
+                activeIcon: LucideIcons.user,
+                label: 'Hồ sơ',
+                selected: index == 3,
+                onTap: () => context.go('/profile'),
+              ),
+            ],
           ),
         ),
       ),
@@ -222,7 +211,8 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class _NavItem extends StatelessWidget {
+
+class _NavItem extends StatefulWidget {
   final IconData icon;
   final IconData activeIcon;
   final String label;
@@ -238,36 +228,73 @@ class _NavItem extends StatelessWidget {
   });
 
   @override
+  State<_NavItem> createState() => _NavItemState();
+}
+
+class _NavItemState extends State<_NavItem> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnim;
+  bool _wasSelected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 750),
+    );
+    _scaleAnim = TweenSequence([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.2), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 1.2, end: 0.97), weight: 35),
+      TweenSequenceItem(tween: Tween(begin: 0.97, end: 1.0), weight: 30),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _wasSelected = widget.selected;
+  }
+
+  @override
+  void didUpdateWidget(covariant _NavItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _wasSelected = widget.selected;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        _controller.forward(from: 0);
+        widget.onTap();
+      },
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.blueDark.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              selected ? activeIcon : icon,
-              size: 22,
-              color: selected ? AppColors.blueDark : AppColors.textTertiary,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Google Sans',
-                fontSize: 10,
-                fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                color: selected ? AppColors.blueDark : AppColors.textTertiary,
+      child: ScaleTransition(
+        scale: _scaleAnim,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.selected ? widget.activeIcon : widget.icon,
+                size: 22,
+                color: widget.selected ? AppColors.blueDark : AppColors.textTertiary,
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontFamily: 'Google Sans',
+                  fontSize: 10,
+                  fontWeight: widget.selected ? FontWeight.w700 : FontWeight.w500,
+                  color: widget.selected ? AppColors.blueDark : AppColors.textTertiary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

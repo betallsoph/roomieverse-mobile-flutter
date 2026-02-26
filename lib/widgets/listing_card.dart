@@ -9,12 +9,14 @@ class ListingCard extends StatelessWidget {
   final RoomListing listing;
   final VoidCallback? onTap;
   final bool compact;
+  final bool showCategory;
 
   const ListingCard({
     super.key,
     required this.listing,
     this.onTap,
     this.compact = false,
+    this.showCategory = true,
   });
 
   Color get _categoryColor {
@@ -113,56 +115,57 @@ class ListingCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _categoryColor,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            categoryLabel(listing.category),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: _categoryTextColor,
-                            ),
-                          ),
+                    if (showCategory) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
                         ),
-                        const Spacer(),
-                        Text(
-                          formatPrice(listing.price),
-                          style: const TextStyle(
-                            fontFamily: 'Google Sans',
-                            fontSize: 13,
+                        decoration: BoxDecoration(
+                          color: _categoryColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          categoryLabel(listing.category),
+                          style: TextStyle(
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: _categoryTextColor,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      listing.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Google Sans',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                        height: 1.3,
+                      ),
+                      const SizedBox(height: 4),
+                    ],
+                    SizedBox(
+                      height: 13 * 1.3 * 3,
+                      child: Text(
+                        listing.title,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: 'Google Sans',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          height: 1.3,
+                        ),
                       ),
                     ),
                     const Spacer(),
+                    Text(
+                      formatPrice(listing.price),
+                      style: TextStyle(
+                        fontFamily: 'Google Sans',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: _categoryTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(LucideIcons.mapPin, size: 12, color: AppColors.textTertiary),
-                        const SizedBox(width: 4),
+                        const Icon(LucideIcons.mapPin, size: 11, color: AppColors.textTertiary),
+                        const SizedBox(width: 3),
                         Expanded(
                           child: Text(
                             listing.location.isNotEmpty
@@ -173,7 +176,7 @@ class ListingCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: AppColors.textTertiary,
                             ),
                           ),

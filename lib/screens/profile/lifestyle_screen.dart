@@ -196,7 +196,6 @@ class _LifestyleScreenState extends ConsumerState<LifestyleScreen> {
                       flex: 2,
                       child: NeoBrutalButton(
                         label: 'Lưu thay đổi',
-                        icon: LucideIcons.check,
                         backgroundColor: AppColors.blue,
                         expanded: true,
                         isLoading: _isLoading,

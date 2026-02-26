@@ -9,6 +9,7 @@ class StepContact extends StatelessWidget {
   final TextEditingController instagramController;
   final bool sameAsPhone;
   final ValueChanged<bool> onSameAsPhoneChanged;
+  final Widget bottomActions;
 
   const StepContact({
     super.key,
@@ -18,6 +19,7 @@ class StepContact extends StatelessWidget {
     required this.instagramController,
     required this.sameAsPhone,
     required this.onSameAsPhoneChanged,
+    required this.bottomActions,
   });
 
   @override
@@ -136,7 +138,9 @@ class StepContact extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
+          bottomActions,
+          const SizedBox(height: 20),
         ],
       ),
     );
