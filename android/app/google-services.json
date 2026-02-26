@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "808985936517",
+    "project_id": "roomieverse-antt",
+    "storage_bucket": "roomieverse-antt.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:808985936517:android:6a024eba6b2fd93bf39fec",
+        "android_client_info": {
+          "package_name": "com.roommieverse.roomieverse_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "808985936517-slfplicjh49kntgsr6g7i3tfqg8pdhmo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7HMX_9Jxehnxx-CjNHvwuA2bgko54mQw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "808985936517-slfplicjh49kntgsr6g7i3tfqg8pdhmo.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "808985936517-rcirtpkods317iufbn78kkv8e0h7lqau.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.roommieverse.roomieverseMobile"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
