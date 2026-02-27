@@ -5,12 +5,16 @@ class StepIndicator extends StatelessWidget {
   final int currentStep;
   final int totalSteps;
   final List<String>? labels;
+  final Color activeColor;
+  final Color activeColorDark;
 
   const StepIndicator({
     super.key,
     required this.currentStep,
     required this.totalSteps,
     this.labels,
+    this.activeColor = AppColors.blue,
+    this.activeColorDark = AppColors.blueDark,
   });
 
   @override
@@ -25,7 +29,7 @@ class StepIndicator extends StatelessWidget {
               return Expanded(
                 child: Container(
                   height: 3,
-                  color: stepIndex < currentStep ? AppColors.blueDark : AppColors.gray,
+                  color: stepIndex < currentStep ? activeColorDark : AppColors.gray,
                 ),
               );
             }
@@ -38,9 +42,9 @@ class StepIndicator extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: isCompleted
-                    ? AppColors.blueDark
+                    ? activeColorDark
                     : isCurrent
-                        ? AppColors.blue
+                        ? activeColor
                         : Colors.white,
                 shape: BoxShape.circle,
                 border: Border.all(

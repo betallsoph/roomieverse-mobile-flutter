@@ -75,6 +75,25 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     return 4;
   }
 
+  Color get _accentColor {
+    switch (_category) {
+      case 'roomshare':
+        return AppColors.pink;
+      case 'short-term':
+        return AppColors.emerald;
+      case 'sublease':
+        return AppColors.orange;
+      case 'roommate':
+      default:
+        return AppColors.blue;
+    }
+  }
+
+  Color get _accentColorDark {
+    final hsl = HSLColor.fromColor(_accentColor);
+    return hsl.withLightness((hsl.lightness - 0.18).clamp(0.0, 1.0)).toColor();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -408,7 +427,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Widget _buildNavButtons(bool isLast) {
-    final bottom = MediaQueryData.fromView(WidgetsBinding.instance.platformDispatcher.views.first).padding.bottom;
+    final bottom = MediaQueryData.fromView(
+      WidgetsBinding.instance.platformDispatcher.views.first,
+    ).padding.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(0, 0, 0, bottom > 0 ? 8 : 0),
       child: Row(
@@ -426,7 +447,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
             flex: 2,
             child: NeoBrutalButton(
               label: isLast ? 'Đăng tin' : 'Tiếp tục',
-              backgroundColor: isLast ? AppColors.emerald : AppColors.blue,
+              backgroundColor: isLast ? _accentColorDark : _accentColor,
               expanded: true,
               isLoading: _isSubmitting,
               onPressed: _isSubmitting ? null : (isLast ? _submit : _nextStep),
@@ -567,6 +588,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               currentStep: _currentStep,
               totalSteps: _totalSteps,
               labels: stepLabels,
+              activeColor: _accentColor,
+              activeColorDark: _accentColorDark,
             ),
           ),
         ),
