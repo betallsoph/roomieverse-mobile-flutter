@@ -1,0 +1,299 @@
+import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import '../../../theme/app_theme.dart';
+import '../../../theme/neo_brutal.dart';
+import '../../../widgets/neo_brutal_dropdown.dart';
+import '../../../data/constants.dart';
+import '../../../utils/helpers.dart';
+
+class RoommateFindPartnerBasic extends StatelessWidget {
+  final String? roommateType;
+  final ValueChanged<String> onRoommateTypeChanged;
+  final TextEditingController titleController;
+  final TextEditingController introController;
+  final TextEditingController addressOtherController;
+  final TextEditingController priceController;
+  final TextEditingController moveInController;
+  final String? selectedCity;
+  final String? selectedDistrict;
+  final ValueChanged<String?> onCityChanged;
+  final ValueChanged<String?> onDistrictChanged;
+  final String? selectedPropertyType;
+  final ValueChanged<String?> onPropertyTypeChanged;
+  final bool locationNegotiable;
+  final ValueChanged<bool> onLocationNegotiableChanged;
+  final bool timeNegotiable;
+  final ValueChanged<bool> onTimeNegotiableChanged;
+  final Widget bottomActions;
+
+  const RoommateFindPartnerBasic({
+    super.key,
+    this.roommateType,
+    required this.onRoommateTypeChanged,
+    required this.titleController,
+    required this.introController,
+    required this.addressOtherController,
+    required this.priceController,
+    required this.moveInController,
+    this.selectedCity,
+    this.selectedDistrict,
+    required this.onCityChanged,
+    required this.onDistrictChanged,
+    this.selectedPropertyType,
+    required this.onPropertyTypeChanged,
+    required this.locationNegotiable,
+    required this.onLocationNegotiableChanged,
+    required this.timeNegotiable,
+    required this.onTimeNegotiableChanged,
+    required this.bottomActions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Thông tin cơ bản',
+            style: TextStyle(fontFamily: 'Google Sans', fontSize: 20, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Bạn chưa có phòng, muốn tìm bạn cùng thuê',
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 20),
+
+          // Roommate type selector
+          _RoommateTypeSelector(
+            roommateType: roommateType,
+            onChanged: onRoommateTypeChanged,
+          ),
+          const SizedBox(height: 14),
+
+          NeoBrutalTextField(
+            label: 'Tiêu đề *',
+            hint: 'VD: Tìm bạn cùng thuê phòng khu vực Bình Thạnh',
+            controller: titleController,
+            maxLength: 80,
+          ),
+          const SizedBox(height: 14),
+
+          NeoBrutalTextField(
+            label: 'Giới thiệu bản thân *',
+            hint: 'Mình là nữ, 25 tuổi, làm văn phòng...',
+            controller: introController,
+            maxLines: 4,
+          ),
+          const SizedBox(height: 14),
+
+          // Desired location
+          NeoBrutalDropdown<String>(
+            label: 'Khu vực mong muốn *',
+            hint: 'Chọn thành phố',
+            value: selectedCity,
+            items: cities.map((c) => (c.value, c.label)).toList(),
+            onChanged: (val) {
+              onCityChanged(val);
+              onDistrictChanged(null);
+            },
+          ),
+          const SizedBox(height: 14),
+
+          NeoBrutalDropdown<String>(
+            label: 'Quận / Huyện *',
+            hint: 'Chọn quận / huyện',
+            value: selectedDistrict,
+            items: selectedCity != null
+                ? getDistrictsByCity(selectedCity!).map((d) => (d.value, d.label)).toList()
+                : [],
+            onChanged: onDistrictChanged,
+          ),
+          const SizedBox(height: 14),
+
+          NeoBrutalTextField(
+            label: 'Ghi chú vị trí',
+            hint: 'VD: Gần đại học, gần metro...',
+            controller: addressOtherController,
+            maxLength: 50,
+          ),
+          const SizedBox(height: 8),
+          _CheckRow(
+            label: 'Vị trí có thể thương lượng',
+            value: locationNegotiable,
+            onChanged: onLocationNegotiableChanged,
+          ),
+          const SizedBox(height: 14),
+
+          // Property type (single select)
+          const Text(
+            'Loại hình mong muốn *',
+            style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: propertyTypeOptions.map((opt) {
+              return NeoBrutalChip(
+                label: opt.$2,
+                selected: selectedPropertyType == opt.$1,
+                selectedColor: AppColors.blue,
+                onTap: () => onPropertyTypeChanged(
+                  selectedPropertyType == opt.$1 ? null : opt.$1,
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 14),
+
+          NeoBrutalTextField(
+            label: 'Ngân sách tối đa *',
+            hint: 'VD: 5.000.000',
+            controller: priceController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [CurrencyInputFormatter()],
+            suffix: 'VNĐ',
+          ),
+          const SizedBox(height: 14),
+
+          NeoBrutalTextField(
+            label: 'Thời gian mong muốn dọn vào *',
+            hint: 'VD: Trong tháng 3/2026, Càng sớm càng tốt...',
+            controller: moveInController,
+          ),
+          const SizedBox(height: 8),
+          _CheckRow(
+            label: 'Thời gian có thể thương lượng',
+            value: timeNegotiable,
+            onChanged: onTimeNegotiableChanged,
+          ),
+
+          const SizedBox(height: 24),
+          bottomActions,
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoommateTypeSelector extends StatelessWidget {
+  final String? roommateType;
+  final ValueChanged<String> onChanged;
+
+  const _RoommateTypeSelector({this.roommateType, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: roommateTypeOptions.map((opt) {
+        final isSelected = roommateType == opt.$1;
+        final isHaveRoom = opt.$1 == 'have-room';
+        const accentColor = Color(0xFF3B82F6);
+        const bgColor = Color(0xFFEFF6FF);
+
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: isHaveRoom ? 6 : 0,
+              left: isHaveRoom ? 0 : 6,
+            ),
+            child: GestureDetector(
+              onTap: () => onChanged(opt.$1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: isSelected ? bgColor : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isSelected ? accentColor : const Color(0xFFE5E7EB),
+                    width: isSelected ? 2 : 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accentColor.withValues(alpha: 0.15)
+                            : const Color(0xFFF4F4F5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isHaveRoom ? LucideIcons.home : LucideIcons.search,
+                        size: 20,
+                        color: isSelected ? accentColor : AppColors.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      isHaveRoom ? 'Có phòng sẵn' : 'Chưa có phòng',
+                      style: TextStyle(
+                        fontFamily: 'Google Sans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? accentColor : AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isHaveRoom ? 'Tìm bạn ở cùng' : 'Tìm bạn cùng thuê',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _CheckRow extends StatelessWidget {
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _CheckRow({required this.label, required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: Row(
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            decoration: BoxDecoration(
+              color: value ? AppColors.blue : Colors.white,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: Colors.black, width: 2),
+            ),
+            child: value ? const Icon(Icons.check, size: 14, color: Colors.black) : null,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Google Sans',
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

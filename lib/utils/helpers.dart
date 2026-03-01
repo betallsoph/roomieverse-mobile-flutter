@@ -1,4 +1,46 @@
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+
+/// Formats number with dot separators while typing (5000000 → 5.000.000).
+class CurrencyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Only allow digits
+    final digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // Format with dot separators
+    final formatted = _addDotSeparators(digits);
+
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  static String _addDotSeparators(String digits) {
+    final buffer = StringBuffer();
+    final len = digits.length;
+    for (var i = 0; i < len; i++) {
+      if (i > 0 && (len - i) % 3 == 0) buffer.write('.');
+      buffer.write(digits[i]);
+    }
+    return buffer.toString();
+  }
+}
+
+/// Strips dots from formatted currency string to get raw number for DB storage.
+String stripCurrencyDots(String formatted) {
+  return formatted.replaceAll('.', '');
+}
 
 String formatPrice(String? price) {
   if (price == null || price.isEmpty) return 'Thương lượng';

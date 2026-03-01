@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/listing_provider.dart';
 import '../../models/listing.dart';
@@ -60,19 +59,10 @@ class MyListingsScreen extends ConsumerWidget {
                 final listing = listings[index];
                 return SizedBox(
                   height: 230,
-                  child: Stack(
-                    children: [
-                      ListingCard(
-                        listing: listing,
-                        onTap: () => context.push('/listing/${listing.id}'),
-                      ),
-                    // Status badge
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: _StatusBadge(status: listing.status ?? 'pending'),
-                    ),
-                  ],
+                  child: ListingCard(
+                    listing: listing,
+                    showStatus: true,
+                    onTap: () => context.push('/listing/${listing.id}'),
                   ),
                 );
               },
@@ -80,53 +70,6 @@ class MyListingsScreen extends ConsumerWidget {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Lỗi: $e')),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  final String status;
-  const _StatusBadge({required this.status});
-
-  (Color, String) get _data {
-    switch (status) {
-      case 'active':
-        return (AppColors.emerald, 'Đang hiển thị');
-      case 'pending':
-        return (AppColors.yellow, 'Chờ duyệt');
-      case 'rejected':
-        return (AppColors.red, 'Bị từ chối');
-      case 'hidden':
-        return (AppColors.gray, 'Đã ẩn');
-      case 'deleted':
-        return (AppColors.gray, 'Đã xoá');
-      default:
-        return (AppColors.gray, status);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final (color, label) = _data;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.black, width: 1.5),
-        boxShadow: const [
-          BoxShadow(color: Colors.black, offset: Offset(1, 1), blurRadius: 0, spreadRadius: -1),
-        ],
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontFamily: 'Google Sans',
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: Colors.black,
         ),
       ),
     );

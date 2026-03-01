@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/neo_brutal.dart';
-import '../../widgets/neo_brutal_slider.dart';
 import '../../providers/auth_provider.dart';
 import '../../models/user_profile.dart';
 import '../../data/constants.dart';
@@ -17,7 +16,7 @@ class LifestyleScreen extends ConsumerStatefulWidget {
 
 class _LifestyleScreenState extends ConsumerState<LifestyleScreen> {
   List<String> _schedule = [];
-  int _cleanlinessLevel = 2;
+  String? _cleanliness;
   List<String> _habits = [];
   List<String> _pets = [];
   final _otherController = TextEditingController();
@@ -38,10 +37,8 @@ class _LifestyleScreenState extends ConsumerState<LifestyleScreen> {
       _schedule = List<String>.from(ls.schedule ?? []);
       _habits = List<String>.from(ls.habits ?? []);
       _otherController.text = ls.otherHabits ?? '';
-      // Map cleanliness
       if (ls.cleanliness != null && ls.cleanliness!.isNotEmpty) {
-        final idx = cleanlinessValues.indexOf(ls.cleanliness!.first);
-        if (idx >= 0) _cleanlinessLevel = idx;
+        _cleanliness = ls.cleanliness!.first;
       }
     }
     _loaded = true;
@@ -62,7 +59,7 @@ class _LifestyleScreenState extends ConsumerState<LifestyleScreen> {
 
       final lifestyle = LifestylePreferences(
         schedule: _schedule.isNotEmpty ? _schedule : null,
-        cleanliness: [cleanlinessValues[_cleanlinessLevel]],
+        cleanliness: _cleanliness != null ? [_cleanliness!] : null,
         habits: _habits.isNotEmpty ? _habits : null,
         otherHabits: _otherController.text.trim().isNotEmpty ? _otherController.text.trim() : null,
       );
@@ -132,12 +129,19 @@ class _LifestyleScreenState extends ConsumerState<LifestyleScreen> {
 
                 // Cleanliness
                 _sectionTitle('Mức độ sạch sẽ'),
-                const SizedBox(height: 4),
-                NeoBrutalSlider(
-                  value: _cleanlinessLevel,
-                  max: 3,
-                  labels: cleanlinessLabels,
-                  onChanged: (v) => setState(() => _cleanlinessLevel = v),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: cleanlinessOptions.map((opt) {
+                    return NeoBrutalChip(
+                      label: opt.$2,
+                      selected: _cleanliness == opt.$1,
+                      selectedColor: AppColors.blue,
+                      onTap: () => setState(() {
+                        _cleanliness = _cleanliness == opt.$1 ? null : opt.$1;
+                      }),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 24),
 

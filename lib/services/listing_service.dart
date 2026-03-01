@@ -90,9 +90,8 @@ class ListingService {
     return snap.docs.map((d) => _docToListing(d as DocumentSnapshot)).toList();
   }
 
-  /// Create a listing
-  Future<String> createListing(Map<String, dynamic> data) async {
-    final category = data['category'] ?? 'roommate';
+  /// Generate a listing ID based on category
+  String generateListingId(String category) {
     final prefix = category == 'sublease'
         ? 'sl'
         : category == 'short-term'
@@ -100,7 +99,13 @@ class ListingService {
             : category == 'roomshare'
                 ? 'rs'
                 : 'rm';
-    final id = '$prefix-${DateTime.now().millisecondsSinceEpoch}';
+    return '$prefix-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  /// Create a listing. If [id] is provided, uses it; otherwise auto-generates.
+  Future<String> createListing(Map<String, dynamic> data, {String? id}) async {
+    final category = data['category'] ?? 'roommate';
+    id ??= generateListingId(category);
 
     await _db.collection(_collection).doc(id).set({
       ...data,

@@ -9,6 +9,8 @@ import 'screens/home/home_screen.dart';
 import 'screens/listings/browse_screen.dart';
 import 'screens/listings/listing_detail_screen.dart';
 import 'screens/listings/create_listing_screen.dart';
+import 'screens/listings/create_short_term_screen.dart';
+import 'screens/listings/create_sublease_screen.dart';
 import 'screens/community/community_screen.dart';
 import 'screens/community/post_detail_screen.dart';
 import 'screens/community/create_post_screen.dart';
@@ -73,6 +75,15 @@ final _router = GoRouter(
       builder: (context, state) =>
           ListingDetailScreen(id: state.pathParameters['id']!),
     ),
+    // IMPORTANT: /community/create must come BEFORE /community/:id
+    GoRoute(
+      path: '/community/create',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final category = state.uri.queryParameters['category'];
+        return CreatePostScreen(initialCategory: category);
+      },
+    ),
     GoRoute(
       path: '/community/:id',
       parentNavigatorKey: _rootNavigatorKey,
@@ -94,15 +105,13 @@ final _router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         final category = state.uri.queryParameters['category'];
+        if (category == 'short-term') {
+          return const CreateShortTermScreen();
+        }
+        if (category == 'sublease') {
+          return const CreateSubleaseScreen();
+        }
         return CreateListingScreen(initialCategory: category);
-      },
-    ),
-    GoRoute(
-      path: '/community/create',
-      parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) {
-        final category = state.uri.queryParameters['category'];
-        return CreatePostScreen(initialCategory: category);
       },
     ),
     GoRoute(

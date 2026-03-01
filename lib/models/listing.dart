@@ -1,12 +1,12 @@
 class RoommatePreferences {
-  final List<String>? gender;
-  final List<String>? status;
+  final String? gender;
+  final String? status;
   final String? statusOther;
-  final List<String>? schedule;
-  final List<String>? cleanliness;
-  final List<String>? habits;
-  final List<String>? pets;
-  final List<String>? moveInTime;
+  final String? schedule;
+  final String? cleanliness;
+  final String? habits;
+  final String? pets;
+  final String? moveInTime;
   final String? other;
 
   RoommatePreferences({
@@ -21,16 +21,24 @@ class RoommatePreferences {
     this.other,
   });
 
+  // Handles both old format (List<String>) and new format (String)
+  static String? _extractSingle(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is List && value.isNotEmpty) return value.first.toString();
+    return null;
+  }
+
   factory RoommatePreferences.fromJson(Map<String, dynamic> json) {
     return RoommatePreferences(
-      gender: (json['gender'] as List?)?.cast<String>(),
-      status: (json['status'] as List?)?.cast<String>(),
+      gender: _extractSingle(json['gender']),
+      status: _extractSingle(json['status']),
       statusOther: json['statusOther'] as String?,
-      schedule: (json['schedule'] as List?)?.cast<String>(),
-      cleanliness: (json['cleanliness'] as List?)?.cast<String>(),
-      habits: (json['habits'] as List?)?.cast<String>(),
-      pets: (json['pets'] as List?)?.cast<String>(),
-      moveInTime: (json['moveInTime'] as List?)?.cast<String>(),
+      schedule: _extractSingle(json['schedule']),
+      cleanliness: _extractSingle(json['cleanliness']),
+      habits: _extractSingle(json['habits']),
+      pets: _extractSingle(json['pets']),
+      moveInTime: _extractSingle(json['moveInTime']),
       other: json['other'] as String?,
     );
   }

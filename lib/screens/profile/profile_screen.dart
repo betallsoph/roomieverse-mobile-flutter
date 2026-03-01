@@ -5,7 +5,11 @@ import 'package:lucide_icons/lucide_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/neo_brutal.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/listing_provider.dart';
+import '../../providers/favorites_provider.dart';
 import '../../models/user_profile.dart';
+import '../profile/my_listings_screen.dart' show userListingsProvider;
+import '../../widgets/listing_card.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -20,6 +24,9 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     final profileAsync = ref.watch(userProfileProvider(user.uid));
+    final favoriteIds = ref.watch(favoritesNotifierProvider);
+    final allListingsAsync = ref.watch(listingsProvider);
+    final userListingsAsync = ref.watch(userListingsProvider);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -123,6 +130,119 @@ class ProfileScreen extends ConsumerWidget {
             ),
 
             const SizedBox(height: 20),
+
+            // Favorites preview
+            allListingsAsync.when(
+              data: (all) {
+                final favListings =
+                    all.where((l) => favoriteIds.contains(l.id)).toList();
+                if (favListings.isEmpty) return const SizedBox.shrink();
+                final preview = favListings.take(3).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Tin yêu thích',
+                          style: TextStyle(
+                            fontFamily: 'Google Sans',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.push('/favorites'),
+                          child: const Text(
+                            'Xem tất cả',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.blueDark,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ...preview.map(
+                      (listing) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: SizedBox(
+                          height: 210,
+                          child: ListingCard(
+                            listing: listing,
+                            onTap: () =>
+                                context.push('/listing/${listing.id}'),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+
+            // User listings preview
+            userListingsAsync.when(
+              data: (listings) {
+                if (listings.isEmpty) return const SizedBox.shrink();
+                final preview = listings.take(3).toList();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Tin đã đăng',
+                          style: TextStyle(
+                            fontFamily: 'Google Sans',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.push('/profile/listings'),
+                          child: const Text(
+                            'Xem tất cả',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.blueDark,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    ...preview.map(
+                      (listing) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: SizedBox(
+                          height: 210,
+                          child: ListingCard(
+                            listing: listing,
+                            showStatus: true,
+                            onTap: () =>
+                                context.push('/listing/${listing.id}'),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
 
             // Menu items
             _MenuItem(

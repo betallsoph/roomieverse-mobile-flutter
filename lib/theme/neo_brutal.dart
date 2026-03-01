@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'app_theme.dart';
 
 class NeoBrutalCard extends StatelessWidget {
@@ -133,6 +134,8 @@ class NeoBrutalTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
   final bool obscureText;
+  final List<TextInputFormatter>? inputFormatters;
+  final String? suffix;
 
   const NeoBrutalTextField({
     super.key,
@@ -144,6 +147,8 @@ class NeoBrutalTextField extends StatelessWidget {
     this.keyboardType,
     this.onChanged,
     this.obscureText = false,
+    this.inputFormatters,
+    this.suffix,
   });
 
   @override
@@ -177,6 +182,7 @@ class NeoBrutalTextField extends StatelessWidget {
             keyboardType: keyboardType,
             onChanged: onChanged,
             obscureText: obscureText,
+            inputFormatters: inputFormatters,
             style: const TextStyle(
               fontFamily: 'Google Sans',
               fontSize: 14,
@@ -186,6 +192,12 @@ class NeoBrutalTextField extends StatelessWidget {
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: const TextStyle(color: AppColors.textTertiary),
+              suffixText: suffix,
+              suffixStyle: const TextStyle(
+                fontFamily: 'Google Sans',
+                fontSize: 13,
+                color: AppColors.textTertiary,
+              ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: InputBorder.none,

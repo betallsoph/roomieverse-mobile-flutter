@@ -9,9 +9,14 @@ import '../../widgets/step_indicator.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/listing_provider.dart';
 import '../../data/constants.dart';
-import 'create_steps/step_basic_info.dart';
-import 'create_steps/step_details.dart';
-import 'create_steps/step_preferences.dart';
+import '../../utils/helpers.dart';
+import 'create_steps/roommate_have_room_basic.dart';
+import 'create_steps/roommate_have_room_details.dart';
+import 'create_steps/roommate_find_partner_basic.dart';
+import 'create_steps/roomshare_basic.dart';
+import 'create_steps/roomshare_images.dart';
+import 'create_steps/roomshare_costs.dart';
+import 'create_steps/shared_preferences_step.dart';
 import 'create_steps/step_contact.dart';
 
 class CreateListingScreen extends ConsumerStatefulWidget {
@@ -28,7 +33,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   bool _isSubmitting = false;
   late String _category;
 
-  // Step 1 - Basic Info
+  // ── Roommate basic ──
   String? _roommateType;
   final _titleController = TextEditingController();
   final _introController = TextEditingController();
@@ -38,31 +43,37 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   final _moveInController = TextEditingController();
   String? _selectedCity;
   String? _selectedDistrict;
-  List<String> _selectedPropertyTypes = [];
+  String? _selectedPropertyType;
   bool _locationNegotiable = false;
   bool _timeNegotiable = false;
 
-  // Step 2 - Details
-  List<String> _imagePaths = [];
+  // ── Roommate have-room details ──
+  final List<String> _imagePaths = [];
   final _roomSizeController = TextEditingController();
   final _occupantsController = TextEditingController();
   final _contractController = TextEditingController();
-  final _othersIntroController = TextEditingController();
   final _amenitiesOtherController = TextEditingController();
   List<String> _selectedAmenities = [];
+
+  // ── Roomshare extra ──
+  final _othersIntroController = TextEditingController();
+  final _totalRoomsController = TextEditingController();
+  final _rentController = TextEditingController();
+  final _depositController = TextEditingController();
+  final _minLeaseController = TextEditingController();
   late Map<String, TextEditingController> _costControllers;
 
-  // Step 3 - Preferences
-  List<String> _prefGender = [];
-  List<String> _prefStatus = [];
-  List<String> _prefSchedule = [];
-  int _cleanlinessLevel = 2;
-  List<String> _prefHabits = [];
-  List<String> _prefPets = [];
-  List<String> _prefMoveInTime = [];
+  // ── Preferences (single-select) ──
+  String? _prefGender;
+  String? _prefStatus;
+  String? _prefSchedule;
+  String? _prefCleanliness;
+  String? _prefHabits;
+  String? _prefPets;
+  String? _prefMoveInTime;
   final _prefOtherController = TextEditingController();
 
-  // Step 4 - Contact
+  // ── Contact ──
   final _phoneController = TextEditingController();
   final _zaloController = TextEditingController();
   final _facebookController = TextEditingController();
@@ -70,19 +81,25 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   bool _sameAsPhone = false;
 
   int get _totalSteps {
-    // find-partner skips step 2 (details)
     if (_category == 'roommate' && _roommateType == 'find-partner') return 3;
-    return 4;
+    if (_category == 'roomshare') return 5;
+    return 4; // roommate have-room
+  }
+
+  List<String> get _stepLabels {
+    if (_category == 'roommate' && _roommateType == 'find-partner') {
+      return ['Cơ bản', 'Yêu cầu', 'Liên hệ'];
+    }
+    if (_category == 'roomshare') {
+      return ['Phòng', 'Hình ảnh', 'Chi phí', 'Yêu cầu', 'Liên hệ'];
+    }
+    return ['Cơ bản', 'Chi tiết', 'Yêu cầu', 'Liên hệ'];
   }
 
   Color get _accentColor {
     switch (_category) {
       case 'roomshare':
         return AppColors.pink;
-      case 'short-term':
-        return AppColors.emerald;
-      case 'sublease':
-        return AppColors.orange;
       case 'roommate':
       default:
         return AppColors.blue;
@@ -100,7 +117,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     _category = widget.initialCategory ?? 'roommate';
     _pageController = PageController();
     _costControllers = {
-      for (final field in costFields) field.$1: TextEditingController(),
+      for (final field in roomshareCostFields) field.$1: TextEditingController(),
     };
   }
 
@@ -116,8 +133,12 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     _roomSizeController.dispose();
     _occupantsController.dispose();
     _contractController.dispose();
-    _othersIntroController.dispose();
     _amenitiesOtherController.dispose();
+    _othersIntroController.dispose();
+    _totalRoomsController.dispose();
+    _rentController.dispose();
+    _depositController.dispose();
+    _minLeaseController.dispose();
     _prefOtherController.dispose();
     _phoneController.dispose();
     _zaloController.dispose();
@@ -129,25 +150,35 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     super.dispose();
   }
 
-  bool _validateCurrentStep() {
-    final skipDetails = _category == 'roommate' && _roommateType == 'find-partner';
-    final actualStep = _currentStep;
+  // ── Validation ──
 
-    // Map step index to logical step based on whether details is skipped
-    // With details: 0=Basic, 1=Details, 2=Preferences, 3=Contact
-    // Without details: 0=Basic, 1=Preferences, 2=Contact
-    if (actualStep == 0) {
-      return _validateBasicInfo();
-    } else if (!skipDetails && actualStep == 1) {
-      return _validateDetails();
-    } else if ((!skipDetails && actualStep == 2) || (skipDetails && actualStep == 1)) {
-      return _validatePreferences();
-    } else {
+  bool _validateCurrentStep() {
+    final isFindPartner = _category == 'roommate' && _roommateType == 'find-partner';
+    final isRoomshare = _category == 'roomshare';
+
+    if (_currentStep == 0) return _validateBasic();
+
+    if (isFindPartner) {
+      // 0=Basic, 1=Preferences, 2=Contact
+      if (_currentStep == 1) return _validatePreferences();
       return _validateContact();
     }
+
+    if (isRoomshare) {
+      // 0=Basic, 1=Images, 2=Costs, 3=Preferences, 4=Contact
+      if (_currentStep == 1) return _validateImages();
+      if (_currentStep == 2) return true; // costs are optional
+      if (_currentStep == 3) return _validatePreferences();
+      return _validateContact();
+    }
+
+    // roommate have-room: 0=Basic, 1=Details, 2=Preferences, 3=Contact
+    if (_currentStep == 1) return _validateImages();
+    if (_currentStep == 2) return _validatePreferences();
+    return _validateContact();
   }
 
-  bool _validateBasicInfo() {
+  bool _validateBasic() {
     if (_category == 'roommate' && _roommateType == null) {
       _showError('Vui lòng chọn loại tin');
       return false;
@@ -161,36 +192,47 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       return false;
     }
     if (_selectedCity == null || _selectedDistrict == null) {
-      _showError('Vui lòng điền đầy đủ địa chỉ');
+      _showError('Vui lòng chọn khu vực');
       return false;
     }
-    if (_selectedPropertyTypes.isEmpty) {
+    if (_selectedPropertyType == null) {
       _showError('Vui lòng chọn loại hình nhà ở');
       return false;
     }
-    if (_priceController.text.trim().isEmpty) {
-      _showError('Vui lòng nhập giá');
-      return false;
-    }
-    final isHaveRoom = _category == 'roommate' && _roommateType == 'have-room';
-    if (!isHaveRoom && _moveInController.text.trim().isEmpty && !_timeNegotiable) {
-      _showError('Vui lòng nhập thời gian dọn vào hoặc chọn "Linh hoạt"');
-      return false;
-    }
-    if (_category == 'roomshare') {
+
+    final isFindPartner = _category == 'roommate' && _roommateType == 'find-partner';
+    if (isFindPartner) {
+      if (_priceController.text.trim().isEmpty) {
+        _showError('Vui lòng nhập ngân sách');
+        return false;
+      }
+      if (_moveInController.text.trim().isEmpty && !_timeNegotiable) {
+        _showError('Vui lòng nhập thời gian hoặc chọn "Linh hoạt"');
+        return false;
+      }
+    } else if (_category == 'roommate') {
+      if (_priceController.text.trim().isEmpty) {
+        _showError('Vui lòng nhập giá');
+        return false;
+      }
+    } else if (_category == 'roomshare') {
+      if (_rentController.text.trim().isEmpty) {
+        _showError('Vui lòng nhập giá thuê');
+        return false;
+      }
       if (_roomSizeController.text.trim().isEmpty) {
-        _showError('Vui lòng nhập diện tích phòng');
+        _showError('Vui lòng nhập diện tích');
         return false;
       }
       if (_occupantsController.text.trim().isEmpty) {
-        _showError('Vui lòng nhập số người hiện tại');
+        _showError('Vui lòng nhập số người');
         return false;
       }
     }
     return true;
   }
 
-  bool _validateDetails() {
+  bool _validateImages() {
     if (_imagePaths.isEmpty) {
       _showError('Vui lòng tải lên ít nhất 1 hình ảnh');
       return false;
@@ -203,27 +245,31 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   bool _validatePreferences() {
-    if (_prefGender.isEmpty) {
+    if (_prefGender == null) {
       _showError('Vui lòng chọn giới tính mong muốn');
       return false;
     }
-    if (_prefStatus.isEmpty) {
-      _showError('Vui lòng chọn tình trạng mong muốn');
+    if (_prefStatus == null) {
+      _showError('Vui lòng chọn tình trạng');
       return false;
     }
-    if (_prefSchedule.isEmpty) {
+    if (_prefSchedule == null) {
       _showError('Vui lòng chọn giờ giấc');
       return false;
     }
-    if (_prefHabits.isEmpty) {
+    if (_prefCleanliness == null) {
+      _showError('Vui lòng chọn mức độ sạch sẽ');
+      return false;
+    }
+    if (_prefHabits == null) {
       _showError('Vui lòng chọn thói quen');
       return false;
     }
-    if (_prefPets.isEmpty) {
+    if (_prefPets == null) {
       _showError('Vui lòng chọn về thú cưng');
       return false;
     }
-    if (_prefMoveInTime.isEmpty) {
+    if (_prefMoveInTime == null) {
       _showError('Vui lòng chọn thời gian dọn vào');
       return false;
     }
@@ -231,11 +277,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   bool _validateContact() {
-    if (_phoneController.text.trim().isEmpty) {
+    final phone = _phoneController.text.trim();
+    if (phone.isEmpty) {
       _showError('Vui lòng nhập số điện thoại');
       return false;
     }
-    final phone = _phoneController.text.trim();
     if (phone.length < 9 || phone.length > 11) {
       _showError('Số điện thoại không hợp lệ');
       return false;
@@ -253,6 +299,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       ),
     );
   }
+
+  // ── Navigation ──
 
   void _nextStep() {
     if (!_validateCurrentStep()) return;
@@ -277,20 +325,12 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     }
   }
 
-  bool _validateAllSteps() {
-    if (!_validateBasicInfo()) return false;
-    final skipDetails = _category == 'roommate' && _roommateType == 'find-partner';
-    if (!skipDetails && !_validateDetails()) return false;
-    if (!_validatePreferences()) return false;
-    if (!_validateContact()) return false;
-    return true;
-  }
+  // ── Submit ──
 
   Future<void> _submit() async {
-    if (!_validateAllSteps()) return;
+    if (!_validateCurrentStep()) return;
 
     setState(() => _isSubmitting = true);
-
     try {
       final user = ref.read(authStateProvider).valueOrNull;
       if (user == null) return;
@@ -300,20 +340,12 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         getCityLabel(_selectedCity),
       ].where((s) => s != null && s.isNotEmpty).join(', ');
 
-      final costs = <String, String>{};
-      for (final entry in _costControllers.entries) {
-        if (entry.value.text.trim().isNotEmpty) {
-          costs[entry.key] = entry.value.text.trim();
-        }
-      }
-
       final data = <String, dynamic>{
         'title': _titleController.text.trim(),
         'author': user.displayName ?? '',
         'authorName': user.displayName ?? '',
         'userId': user.uid,
         'category': _category,
-        'price': _priceController.text.trim(),
         'location': location,
         'city': _selectedCity,
         'district': _selectedDistrict,
@@ -321,52 +353,103 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         'introduction': _introController.text.trim(),
         'phone': _phoneController.text.trim(),
         'postedDate': '${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-        'moveInDate': _moveInController.text.trim(),
-        if (_roommateType != null) 'roommateType': _roommateType,
+        if (_selectedPropertyType != null) ...{
+          'propertyType': _selectedPropertyType,
+          'propertyTypes': [_selectedPropertyType],
+        },
         if (_addressController.text.trim().isNotEmpty) 'specificAddress': _addressController.text.trim(),
         if (_buildingController.text.trim().isNotEmpty) 'buildingName': _buildingController.text.trim(),
-        if (_selectedPropertyTypes.isNotEmpty) 'propertyTypes': _selectedPropertyTypes,
-        'locationNegotiable': _locationNegotiable,
-        'timeNegotiable': _timeNegotiable,
-        if (_zaloController.text.trim().isNotEmpty) 'zalo': _zaloController.text.trim(),
-        if (_sameAsPhone) 'zalo': _phoneController.text.trim(),
+        if (_sameAsPhone)
+          'zalo': _phoneController.text.trim()
+        else if (_zaloController.text.trim().isNotEmpty)
+          'zalo': _zaloController.text.trim(),
         if (_facebookController.text.trim().isNotEmpty) 'facebook': _facebookController.text.trim(),
         if (_instagramController.text.trim().isNotEmpty) 'instagram': _instagramController.text.trim(),
-        // Details (step 2)
         if (_selectedAmenities.isNotEmpty) 'amenities': _selectedAmenities,
         if (_amenitiesOtherController.text.trim().isNotEmpty) 'amenitiesOther': _amenitiesOtherController.text.trim(),
         if (_roomSizeController.text.trim().isNotEmpty) 'roomSize': _roomSizeController.text.trim(),
         if (_occupantsController.text.trim().isNotEmpty) 'currentOccupants': _occupantsController.text.trim(),
-        if (_contractController.text.trim().isNotEmpty) 'minContractDuration': _contractController.text.trim(),
         if (_othersIntroController.text.trim().isNotEmpty) 'othersIntro': _othersIntroController.text.trim(),
-        if (costs.isNotEmpty) 'costs': costs,
-        // Preferences (step 3)
-        'preferences': {
-          if (_prefGender.isNotEmpty) 'gender': _prefGender,
-          if (_prefStatus.isNotEmpty) 'status': _prefStatus,
-          if (_prefSchedule.isNotEmpty) 'schedule': _prefSchedule,
-          'cleanliness': [cleanlinessValues[_cleanlinessLevel]],
-          if (_prefHabits.isNotEmpty) 'habits': _prefHabits,
-          if (_prefPets.isNotEmpty) 'pets': _prefPets,
-          if (_prefMoveInTime.isNotEmpty) 'moveInTime': _prefMoveInTime,
-          if (_prefOtherController.text.trim().isNotEmpty) 'other': _prefOtherController.text.trim(),
-        },
-        // Contact as sub-object too
         'contact': {
           'phone': _phoneController.text.trim(),
-          if (_zaloController.text.trim().isNotEmpty) 'zalo': _zaloController.text.trim(),
-          if (_sameAsPhone) 'zalo': _phoneController.text.trim(),
+          if (_sameAsPhone)
+            'zalo': _phoneController.text.trim()
+          else if (_zaloController.text.trim().isNotEmpty)
+            'zalo': _zaloController.text.trim(),
           if (_facebookController.text.trim().isNotEmpty) 'facebook': _facebookController.text.trim(),
           if (_instagramController.text.trim().isNotEmpty) 'instagram': _instagramController.text.trim(),
         },
+        'preferences': {
+          if (_prefGender != null) 'gender': [_prefGender],
+          if (_prefStatus != null) 'status': [_prefStatus],
+          if (_prefSchedule != null) 'schedule': [_prefSchedule],
+          if (_prefCleanliness != null) 'cleanliness': [_prefCleanliness],
+          if (_prefHabits != null) 'habits': [_prefHabits],
+          if (_prefPets != null) 'pets': [_prefPets],
+          if (_prefMoveInTime != null) 'moveInTime': [_prefMoveInTime],
+          if (_prefOtherController.text.trim().isNotEmpty) 'other': _prefOtherController.text.trim(),
+        },
       };
 
-      await ref.read(listingServiceProvider).createListing(data);
+      // Category-specific data (strip currency dots before saving)
+      if (_category == 'roommate') {
+        data['roommateType'] = _roommateType;
+        data['price'] = stripCurrencyDots(_priceController.text.trim());
+        if (_roommateType == 'find-partner') {
+          data['moveInDate'] = _moveInController.text.trim();
+          data['locationNegotiable'] = _locationNegotiable;
+          data['timeNegotiable'] = _timeNegotiable;
+        } else {
+          data['moveInDate'] = '';
+          if (_contractController.text.trim().isNotEmpty) {
+            data['minContractDuration'] = _contractController.text.trim();
+          }
+        }
+      } else if (_category == 'roomshare') {
+        data['roommateType'] = 'have-room';
+        data['price'] = stripCurrencyDots(_rentController.text.trim());
+        data['moveInDate'] = 'Linh hoạt';
+        if (_totalRoomsController.text.trim().isNotEmpty) {
+          data['totalRooms'] = _totalRoomsController.text.trim();
+        }
+        if (_depositController.text.trim().isNotEmpty) {
+          data['deposit'] = stripCurrencyDots(_depositController.text.trim());
+        }
+        if (_minLeaseController.text.trim().isNotEmpty) {
+          data['minContractDuration'] = _minLeaseController.text.trim();
+        }
+        // Costs
+        final costs = <String, String>{};
+        costs['rent'] = stripCurrencyDots(_rentController.text.trim());
+        if (_depositController.text.trim().isNotEmpty) {
+          costs['deposit'] = stripCurrencyDots(_depositController.text.trim());
+        }
+        for (final entry in _costControllers.entries) {
+          if (entry.value.text.trim().isNotEmpty) {
+            costs[entry.key] = stripCurrencyDots(entry.value.text.trim());
+          }
+        }
+        if (costs.isNotEmpty) data['costs'] = costs;
+      }
+
+      final listingService = ref.read(listingServiceProvider);
+      final listingId = listingService.generateListingId(_category);
+
+      // Upload images if any
+      if (_imagePaths.isNotEmpty) {
+        final uploadService = ref.read(imageUploadServiceProvider);
+        final imageUrls = await uploadService.uploadImages(
+          _imagePaths,
+          'listings',
+          listingId,
+        );
+        if (imageUrls.isNotEmpty) data['images'] = imageUrls;
+      }
+
+      await listingService.createListing(data, id: listingId);
       ref.invalidate(listingsProvider);
 
-      if (mounted) {
-        _showSuccessDialog();
-      }
+      if (mounted) _showSuccessDialog();
     } catch (e) {
       _showError('Có lỗi xảy ra: $e');
     } finally {
@@ -412,7 +495,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               const SizedBox(height: 20),
               NeoBrutalButton(
                 label: 'Về trang chủ',
-                backgroundColor: AppColors.blue,
+                backgroundColor: _accentColor,
                 expanded: true,
                 onPressed: () {
                   Navigator.pop(ctx);
@@ -425,6 +508,25 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       ),
     );
   }
+
+  // ── Image picking ──
+
+  Future<void> _pickImages() async {
+    final picker = ImagePicker();
+    final images = await picker.pickMultiImage(
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 80,
+    );
+    if (images.isNotEmpty) {
+      setState(() {
+        final remaining = 5 - _imagePaths.length;
+        _imagePaths.addAll(images.take(remaining).map((f) => f.path));
+      });
+    }
+  }
+
+  // ── Nav buttons ──
 
   Widget _buildNavButtons(bool isLast) {
     final bottom = MediaQueryData.fromView(
@@ -458,64 +560,144 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     );
   }
 
-  List<Widget> _buildStepPages() {
-    final skipDetails = _category == 'roommate' && _roommateType == 'find-partner';
-    final totalSteps = _totalSteps;
+  // ── Build pages ──
 
+  List<Widget> _buildStepPages() {
+    final totalSteps = _totalSteps;
     Widget navFor(int stepIndex) => _buildNavButtons(stepIndex == totalSteps - 1);
 
-    final pages = <Widget>[
-      StepBasicInfo(
-        category: _category,
-        roommateType: _roommateType,
-        onRoommateTypeChanged: (v) => setState(() => _roommateType = v),
+    final isFindPartner = _category == 'roommate' && _roommateType == 'find-partner';
+    final isRoomshare = _category == 'roomshare';
+
+    final pages = <Widget>[];
+
+    // Step 0: Basic info (varies per category)
+    if (isRoomshare) {
+      pages.add(RoomshareBasic(
+        selectedPropertyType: _selectedPropertyType,
+        onPropertyTypeChanged: (v) => setState(() => _selectedPropertyType = v),
         titleController: _titleController,
         introController: _introController,
+        othersIntroController: _othersIntroController,
         addressController: _addressController,
         buildingController: _buildingController,
+        selectedCity: _selectedCity,
+        selectedDistrict: _selectedDistrict,
+        onCityChanged: (v) => setState(() => _selectedCity = v),
+        onDistrictChanged: (v) => setState(() => _selectedDistrict = v),
+        totalRoomsController: _totalRoomsController,
+        roomSizeController: _roomSizeController,
+        occupantsController: _occupantsController,
+        rentController: _rentController,
+        depositController: _depositController,
+        minLeaseController: _minLeaseController,
+        bottomActions: navFor(0),
+      ));
+    } else if (isFindPartner) {
+      pages.add(RoommateFindPartnerBasic(
+        roommateType: _roommateType,
+        onRoommateTypeChanged: (v) {
+          if (v != _roommateType) {
+            setState(() {
+              _roommateType = v;
+              _currentStep = 0;
+            });
+            _pageController.jumpToPage(0);
+          }
+        },
+        titleController: _titleController,
+        introController: _introController,
+        addressOtherController: _addressController,
         priceController: _priceController,
         moveInController: _moveInController,
         selectedCity: _selectedCity,
         selectedDistrict: _selectedDistrict,
         onCityChanged: (v) => setState(() => _selectedCity = v),
         onDistrictChanged: (v) => setState(() => _selectedDistrict = v),
-        selectedPropertyTypes: _selectedPropertyTypes,
-        onPropertyTypesChanged: (v) => setState(() => _selectedPropertyTypes = v),
+        selectedPropertyType: _selectedPropertyType,
+        onPropertyTypeChanged: (v) => setState(() => _selectedPropertyType = v),
         locationNegotiable: _locationNegotiable,
         onLocationNegotiableChanged: (v) => setState(() => _locationNegotiable = v),
         timeNegotiable: _timeNegotiable,
         onTimeNegotiableChanged: (v) => setState(() => _timeNegotiable = v),
         bottomActions: navFor(0),
-      ),
-    ];
-
-    if (!skipDetails) {
-      pages.add(StepDetails(
-        imagePaths: _imagePaths,
-        onAddImages: _pickImages,
-        onRemoveImage: (i) => setState(() => _imagePaths.removeAt(i)),
-        roomSizeController: _roomSizeController,
-        occupantsController: _occupantsController,
-        contractController: _contractController,
-        othersIntroController: _othersIntroController,
-        amenitiesOtherController: _amenitiesOtherController,
-        selectedAmenities: _selectedAmenities,
-        onAmenitiesChanged: (v) => setState(() => _selectedAmenities = v),
-        costControllers: _costControllers,
-        bottomActions: navFor(1),
+      ));
+    } else {
+      // roommate have-room
+      pages.add(RoommateHaveRoomBasic(
+        roommateType: _roommateType,
+        onRoommateTypeChanged: (v) {
+          if (v != _roommateType) {
+            setState(() {
+              _roommateType = v;
+              _currentStep = 0;
+            });
+            _pageController.jumpToPage(0);
+          }
+        },
+        titleController: _titleController,
+        introController: _introController,
+        addressController: _addressController,
+        buildingController: _buildingController,
+        priceController: _priceController,
+        selectedCity: _selectedCity,
+        selectedDistrict: _selectedDistrict,
+        onCityChanged: (v) => setState(() => _selectedCity = v),
+        onDistrictChanged: (v) => setState(() => _selectedDistrict = v),
+        selectedPropertyType: _selectedPropertyType,
+        onPropertyTypeChanged: (v) => setState(() => _selectedPropertyType = v),
+        bottomActions: navFor(0),
       ));
     }
 
-    final prefStep = skipDetails ? 1 : 2;
-    pages.add(StepPreferences(
+    // Images/details step (not for find-partner)
+    if (!isFindPartner) {
+      if (isRoomshare) {
+        pages.add(RoomshareImages(
+          imagePaths: _imagePaths,
+          onAddImages: _pickImages,
+          onRemoveImage: (i) => setState(() => _imagePaths.removeAt(i)),
+          amenitiesOtherController: _amenitiesOtherController,
+          selectedAmenities: _selectedAmenities,
+          onAmenitiesChanged: (v) => setState(() => _selectedAmenities = v),
+          bottomActions: navFor(1),
+        ));
+      } else {
+        pages.add(RoommateHaveRoomDetails(
+          imagePaths: _imagePaths,
+          onAddImages: _pickImages,
+          onRemoveImage: (i) => setState(() => _imagePaths.removeAt(i)),
+          roomSizeController: _roomSizeController,
+          occupantsController: _occupantsController,
+          contractController: _contractController,
+          amenitiesOtherController: _amenitiesOtherController,
+          selectedAmenities: _selectedAmenities,
+          onAmenitiesChanged: (v) => setState(() => _selectedAmenities = v),
+          bottomActions: navFor(1),
+        ));
+      }
+    }
+
+    // Roomshare costs step
+    if (isRoomshare) {
+      pages.add(RoomshareCosts(
+        isApartment: _selectedPropertyType == 'apartment',
+        costControllers: _costControllers,
+        bottomActions: navFor(2),
+      ));
+    }
+
+    // Preferences step
+    final prefStepIndex = isFindPartner ? 1 : (isRoomshare ? 3 : 2);
+    pages.add(SharedPreferencesStep(
       selectedGender: _prefGender,
       onGenderChanged: (v) => setState(() => _prefGender = v),
       selectedStatus: _prefStatus,
       onStatusChanged: (v) => setState(() => _prefStatus = v),
       selectedSchedule: _prefSchedule,
       onScheduleChanged: (v) => setState(() => _prefSchedule = v),
-      cleanlinessLevel: _cleanlinessLevel,
-      onCleanlinessChanged: (v) => setState(() => _cleanlinessLevel = v),
+      selectedCleanliness: _prefCleanliness,
+      onCleanlinessChanged: (v) => setState(() => _prefCleanliness = v),
       selectedHabits: _prefHabits,
       onHabitsChanged: (v) => setState(() => _prefHabits = v),
       selectedPets: _prefPets,
@@ -523,10 +705,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       selectedMoveInTime: _prefMoveInTime,
       onMoveInTimeChanged: (v) => setState(() => _prefMoveInTime = v),
       otherController: _prefOtherController,
-      bottomActions: navFor(prefStep),
+      bottomActions: navFor(prefStepIndex),
     ));
 
-    final contactStep = skipDetails ? 2 : 3;
+    // Contact step
+    final contactStepIndex = totalSteps - 1;
     pages.add(StepContact(
       phoneController: _phoneController,
       zaloController: _zaloController,
@@ -537,35 +720,14 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         _sameAsPhone = v;
         if (v) _zaloController.text = _phoneController.text;
       }),
-      bottomActions: navFor(contactStep),
+      bottomActions: navFor(contactStepIndex),
     ));
 
     return pages;
   }
 
-  Future<void> _pickImages() async {
-    final picker = ImagePicker();
-    final images = await picker.pickMultiImage(
-      maxWidth: 1200,
-      maxHeight: 1200,
-      imageQuality: 80,
-    );
-    if (images.isNotEmpty) {
-      setState(() {
-        final remaining = 5 - _imagePaths.length;
-        _imagePaths.addAll(
-          images.take(remaining).map((f) => f.path),
-        );
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final stepLabels = _category == 'roommate' && _roommateType == 'find-partner'
-        ? ['Cơ bản', 'Yêu cầu', 'Liên hệ']
-        : ['Cơ bản', 'Chi tiết', 'Yêu cầu', 'Liên hệ'];
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -587,7 +749,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
             child: StepIndicator(
               currentStep: _currentStep,
               totalSteps: _totalSteps,
-              labels: stepLabels,
+              labels: _stepLabels,
               activeColor: _accentColor,
               activeColorDark: _accentColorDark,
             ),

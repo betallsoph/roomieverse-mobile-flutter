@@ -96,101 +96,111 @@ String? getDistrictLabel(String? cityValue, String? districtValue) {
   return districtValue;
 }
 
-// Amenities
-const amenityOptions = [
-  'Điều hoà',
-  'WiFi',
-  'Máy giặt',
-  'Tủ lạnh',
-  'Nóng lạnh',
-  'Ban công',
-  'Bếp',
-  'Gửi xe',
-  'Bảo vệ',
-  'Thú cưng OK',
-  'Nội thất',
+// ── Amenities ─────────────────────────────────────────────
+
+// Roommate amenities (13 + other)
+const roommateAmenityOptions = [
+  'Điều hoà', 'WiFi', 'Máy giặt', 'Tủ lạnh', 'Bếp',
+  'Gửi xe', 'Hồ bơi', 'Gym', 'Thang máy', 'Bảo vệ',
+  'Ban công', 'Nội thất',
 ];
 
-// Property types
+// Roomshare amenities (14 + other)
+const roomshareAmenityOptions = [
+  'Điều hoà', 'WiFi', 'Máy giặt', 'Tủ lạnh', 'Bếp',
+  'Gửi xe', 'Hồ bơi', 'Gym', 'Thang máy', 'Bảo vệ',
+  'Ban công', 'Nội thất', 'WC riêng',
+];
+
+// Short-term & sublease amenities (toggle buttons)
+const simpleAmenityOptions = [
+  ('ac', 'Điều hoà'),
+  ('wifi', 'WiFi'),
+  ('washing', 'Máy giặt'),
+  ('fridge', 'Tủ lạnh'),
+  ('kitchen', 'Bếp'),
+  ('private-wc', 'WC riêng'),
+  ('furnished', 'Nội thất'),
+  ('parking', 'Gửi xe'),
+  ('security', 'Bảo vệ'),
+  ('elevator', 'Thang máy'),
+];
+
+// Keep old name for backward compatibility
+const amenityOptions = roommateAmenityOptions;
+
+// ── Property types ────────────────────────────────────────
+
+// Full property types (roommate - single select)
 const propertyTypeOptions = [
-  ('house', 'Nhà'),
   ('apartment', 'Chung cư'),
+  ('room', 'Phòng trọ'),
+  ('service-apartment', 'Căn hộ dịch vụ'),
+  ('dormitory', 'Ký túc xá'),
+  ('house', 'Nhà nguyên căn'),
 ];
 
-// Roommate type
+// Roomshare property types (binary toggle)
+const roomsharePropertyTypes = [
+  ('apartment', 'Chung cư'),
+  ('house', 'Nhà'),
+];
+
+// ── Roommate type ─────────────────────────────────────────
+
 const roommateTypeOptions = [
   ('have-room', 'Có phòng, tìm người ở cùng'),
   ('find-partner', 'Tìm phòng, tìm bạn ở ghép'),
 ];
 
-// Gender preferences
+// ── Preferences (ALL single-select to match web) ─────────
+
 const genderOptions = [
   ('male', 'Nam'),
   ('female', 'Nữ'),
   ('any', 'Không quan tâm'),
 ];
 
-// Status preferences
 const statusOptions = [
   ('student', 'Sinh viên'),
   ('working', 'Đi làm'),
-  ('freelancer', 'Freelancer'),
+  ('both', 'Cả hai'),
   ('other', 'Khác'),
 ];
 
-// Schedule preferences
 const scheduleOptions = [
   ('early', 'Ngủ sớm, dậy sớm'),
   ('late', 'Cú đêm'),
   ('flexible', 'Linh hoạt'),
 ];
 
-// Cleanliness labels (0-3 slider)
-const cleanlinessLabels = [
-  'Bừa bộn',
-  'Thoải mái',
-  'Bình thường',
-  'Siêu sạch sẽ',
+const cleanlinessOptions = [
+  ('very-clean', 'Siêu sạch sẽ'),
+  ('normal', 'Bình thường'),
+  ('relaxed', 'Thoải mái'),
 ];
 
-const cleanlinessValues = [
-  'messy',
-  'relaxed',
-  'normal',
-  'very-clean',
-];
-
-// Habits
 const habitOptions = [
-  ('smoke', 'Hút thuốc'),
-  ('drink', 'Uống rượu bia'),
-  ('loud', 'Ồn ào, hay mở nhạc'),
-  ('quiet', 'Yên lặng'),
-  ('gamer', 'Hay chơi game'),
-  ('long-shower', 'Tắm lâu'),
-  ('cook', 'Hay nấu ăn'),
-  ('wfh', 'Làm việc tại nhà'),
-  ('invite-friends', 'Hay mời bạn về chơi'),
-  ('introvert', 'Thích ở một mình'),
-];
-
-// Pet preferences
-const petOptions = [
-  ('has-pet', 'Đang nuôi thú cưng'),
-  ('want-pet', 'Muốn nuôi thú cưng'),
-  ('no-pet', 'Không nuôi thú cưng'),
-  ('pet-allergy', 'Dị ứng lông thú cưng'),
-];
-
-// Move-in time
-const moveInTimeOptions = [
-  ('asap', 'Càng sớm càng tốt'),
-  ('this-month', 'Trong tháng này'),
-  ('next-month', 'Tháng sau'),
+  ('no-smoke', 'Không hút thuốc'),
+  ('no-alcohol', 'Không rượu bia'),
   ('flexible', 'Linh hoạt'),
 ];
 
-// Community post categories
+const petOptions = [
+  ('no-pet', 'Không thú cưng'),
+  ('pet-ok', 'Có thú cưng OK'),
+  ('any', 'Không quan tâm'),
+];
+
+const moveInTimeOptions = [
+  ('early-month', 'Đầu tháng'),
+  ('end-month', 'Cuối tháng'),
+  ('any', 'Bất kỳ'),
+  ('asap', 'Càng sớm càng tốt'),
+];
+
+// ── Community post categories ─────────────────────────────
+
 const communityCategories = [
   ('tips', 'Mẹo hay', 'Chia sẻ kinh nghiệm tìm phòng, ở ghép'),
   ('drama', 'Drama', 'Câu chuyện, tình huống thực tế'),
@@ -199,7 +209,9 @@ const communityCategories = [
   ('blog', 'Blog', 'Bài viết dài, chia sẻ chuyên sâu'),
 ];
 
-// Cost breakdown fields
+// ── Cost breakdown fields ─────────────────────────────────
+
+// Full cost fields (used by roommate have-room in step 1 as total)
 const costFields = [
   ('rent', 'Tiền phòng'),
   ('deposit', 'Tiền cọc'),
@@ -211,3 +223,28 @@ const costFields = [
   ('management', 'Quản lý'),
   ('other', 'Khác'),
 ];
+
+// Roomshare additional costs (step 3)
+const roomshareCostFields = [
+  ('electricity', 'Điện'),
+  ('water', 'Nước'),
+  ('internet', 'Internet'),
+  ('service', 'Dịch vụ'),
+  ('management', 'Quản lý'),
+  ('parking', 'Gửi xe'),
+  ('other', 'Khác'),
+];
+
+// ── Label lookup helpers ─────────────────────────────────
+
+/// Get display label from a (value, label) option list
+String? getOptionLabel(List<(String, String)> options, String? value) {
+  if (value == null) return null;
+  for (final opt in options) {
+    if (opt.$1 == value) return opt.$2;
+  }
+  return value;
+}
+
+/// Get property type label
+String? getPropertyTypeLabel(String? value) => getOptionLabel(propertyTypeOptions, value);

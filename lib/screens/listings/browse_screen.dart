@@ -18,18 +18,24 @@ class BrowseScreen extends ConsumerStatefulWidget {
 class _BrowseScreenState extends ConsumerState<BrowseScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  int _selectedIndex = 0;
 
   static const _categories = [
-    ('roommate', 'Tìm bạn ở ghép'),
-    ('roomshare', 'Phòng share'),
-    ('short-term', 'Ngắn ngày'),
-    ('sublease', 'Sang lại'),
+    ('roommate', 'Bạn ở ghép', AppColors.blueLight),
+    ('roomshare', 'Phòng share', AppColors.pinkLight),
+    ('short-term', 'Ngắn ngày', AppColors.emeraldLight),
+    ('sublease', 'Sang lại', AppColors.orangeLight),
   ];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _categories.length, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() => _selectedIndex = _tabController.index);
+      }
+    });
   }
 
   @override
@@ -122,61 +128,121 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
     return SafeArea(
       child: Column(
         children: [
-          // Header
+          // Search bar + post button
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Tìm kiếm',
-                  style: TextStyle(
-                    fontFamily: 'Google Sans',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // TODO: navigate to search
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 11),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(AppRadius.lg),
+                        border:
+                            Border.all(color: AppColors.border, width: 2),
+                        boxShadow: AppShadows.secondary,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(LucideIcons.search,
+                              size: 18, color: AppColors.textTertiary),
+                          const SizedBox(width: 10),
+                          Text(
+                            'Tìm kiếm...',
+                            style: TextStyle(
+                              fontFamily: 'Google Sans',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                NeoBrutalButton(
-                  label: 'Đăng tin',
-                  fontSize: 13,
-                  onPressed: () => _showCategoryPicker(context),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () => _showCategoryPicker(context),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                    decoration: BoxDecoration(
+                      color: _categories[_selectedIndex].$3,
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      border: Border.all(color: AppColors.border, width: 2),
+                    ),
+                    child: const Text(
+                      'Đăng tin',
+                      style: TextStyle(
+                        fontFamily: 'Google Sans',
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
 
-          // Category tabs
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.black, width: 2),
-              ),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              labelColor: AppColors.textPrimary,
-              unselectedLabelColor: AppColors.textTertiary,
-              labelStyle: const TextStyle(
-                fontFamily: 'Google Sans',
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-              unselectedLabelStyle: const TextStyle(
-                fontFamily: 'Google Sans',
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-              indicatorColor: AppColors.blueDark,
-              indicatorWeight: 3,
-              tabAlignment: TabAlignment.start,
-              tabs: _categories
-                  .map((c) => Tab(text: c.$2))
-                  .toList(),
+          // Category chips
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _categories.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final cat = _categories[index];
+                final isSelected = _selectedIndex == index;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedIndex = index);
+                    _tabController.animateTo(index);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: isSelected ? cat.$3 : AppColors.background,
+                      borderRadius: BorderRadius.circular(AppRadius.lg),
+                      border: Border.all(
+                        color: isSelected ? AppColors.border : const Color(0xFFD4D4D8),
+                        width: isSelected ? 2 : 1.5,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        cat.$2,
+                        style: TextStyle(
+                          fontFamily: 'Google Sans',
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? AppColors.textPrimary
+                              : AppColors.textTertiary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
+          const SizedBox(height: 2),
 
           // Listing content
           Expanded(
