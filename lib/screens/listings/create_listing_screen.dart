@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -6,7 +7,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/neo_brutal.dart';
 import '../../widgets/step_indicator.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/listing_provider.dart';
 import '../../data/constants.dart';
 import '../../utils/helpers.dart';
@@ -332,8 +332,12 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
     setState(() => _isSubmitting = true);
     try {
-      final user = ref.read(authStateProvider).valueOrNull;
-      if (user == null) return;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        _showError('Vui lòng đăng nhập trước khi đăng tin');
+        if (mounted) context.push('/auth');
+        return;
+      }
 
       final location = [
         getDistrictLabel(_selectedCity, _selectedDistrict),
@@ -400,7 +404,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           data['locationNegotiable'] = _locationNegotiable;
           data['timeNegotiable'] = _timeNegotiable;
         } else {
-          data['moveInDate'] = '';
+          data['moveInDate'] = _moveInController.text.trim().isNotEmpty
+              ? _moveInController.text.trim()
+              : 'Linh hoạt';
           if (_contractController.text.trim().isNotEmpty) {
             data['minContractDuration'] = _contractController.text.trim();
           }
@@ -448,9 +454,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
       await listingService.createListing(data, id: listingId);
       ref.invalidate(listingsProvider);
+      ref.invalidate(listingsByCategoryProvider);
 
       if (mounted) _showSuccessDialog();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('CreateListing error: $e\n$stackTrace');
       _showError('Có lỗi xảy ra: $e');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
@@ -640,6 +648,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         addressController: _addressController,
         buildingController: _buildingController,
         priceController: _priceController,
+        moveInController: _moveInController,
         selectedCity: _selectedCity,
         selectedDistrict: _selectedDistrict,
         onCityChanged: (v) => setState(() => _selectedCity = v),

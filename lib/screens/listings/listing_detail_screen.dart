@@ -38,27 +38,57 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
 
           final images = listing.images ?? (listing.image != null ? [listing.image!] : <String>[]);
 
-          return CustomScrollView(
-            slivers: [
-              _buildImageAppBar(images, isFav),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (listing.status != null && listing.status != 'active')
-                        _buildStatusBanner(listing.status!),
-                      _buildHeader(listing),
-                      const SizedBox(height: 20),
-                      const Divider(thickness: 2, color: Colors.black12),
-                      const SizedBox(height: 16),
-                      _buildCategoryBody(listing),
-                      const SizedBox(height: 24),
-                      _buildContactSection(listing),
-                      const SizedBox(height: 40),
-                    ],
-                  ),
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image carousel
+                    _buildImageSection(images),
+
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (listing.status != null && listing.status != 'active')
+                            _buildStatusBanner(listing.status!),
+                          _buildHeader(listing),
+                          const SizedBox(height: 20),
+                          const Divider(thickness: 2, color: Colors.black12),
+                          const SizedBox(height: 16),
+                          _buildCategoryBody(listing),
+                          const SizedBox(height: 24),
+                          _buildContactSection(listing),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Floating back button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                left: 12,
+                child: _circleButton(
+                  icon: LucideIcons.arrowLeft,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
+
+              // Floating favorite button
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 8,
+                right: 12,
+                child: _circleButton(
+                  icon: isFav ? LucideIcons.heartOff : LucideIcons.heart,
+                  onTap: () {
+                    ref.read(favoritesNotifierProvider.notifier).toggle(widget.id);
+                  },
                 ),
               ),
             ],
@@ -70,69 +100,53 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
     );
   }
 
-  // ── Image carousel ────────────────────────────────────────
+  // ── Image section ────────────────────────────────────────
 
-  Widget _buildImageAppBar(List<String> images, bool isFav) {
-    return SliverAppBar(
-      expandedHeight: 280,
-      pinned: true,
-      backgroundColor: Colors.white,
-      leading: _circleButton(
-        icon: LucideIcons.arrowLeft,
-        onTap: () => Navigator.pop(context),
-      ),
-      actions: [
-        _circleButton(
-          icon: isFav ? LucideIcons.heartOff : LucideIcons.heart,
-          onTap: () {
-            ref.read(favoritesNotifierProvider.notifier).toggle(widget.id);
-          },
-        ),
-        const SizedBox(width: 8),
-      ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: images.isNotEmpty
-            ? Stack(
-                fit: StackFit.expand,
-                children: [
-                  PageView.builder(
-                    itemCount: images.length,
-                    onPageChanged: (i) => setState(() => _currentImageIndex = i),
-                    itemBuilder: (_, i) => CachedNetworkImage(
-                      imageUrl: images[i],
-                      fit: BoxFit.cover,
-                    ),
+  Widget _buildImageSection(List<String> images) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return SizedBox(
+      height: 280 + topPadding,
+      child: images.isNotEmpty
+          ? Stack(
+              fit: StackFit.expand,
+              children: [
+                PageView.builder(
+                  itemCount: images.length,
+                  onPageChanged: (i) => setState(() => _currentImageIndex = i),
+                  itemBuilder: (_, i) => CachedNetworkImage(
+                    imageUrl: images[i],
+                    fit: BoxFit.cover,
                   ),
-                  if (images.length > 1)
-                    Positioned(
-                      bottom: 12,
-                      left: 0,
-                      right: 0,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(
-                          images.length,
-                          (i) => Container(
-                            width: i == _currentImageIndex ? 20 : 8,
-                            height: 8,
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            decoration: BoxDecoration(
-                              color: i == _currentImageIndex ? Colors.white : Colors.white54,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
+                ),
+                if (images.length > 1)
+                  Positioned(
+                    bottom: 12,
+                    left: 0,
+                    right: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        images.length,
+                        (i) => Container(
+                          width: i == _currentImageIndex ? 20 : 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: i == _currentImageIndex ? Colors.white : Colors.white54,
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                       ),
                     ),
-                ],
-              )
-            : Container(
-                color: _placeholderColor(null),
-                child: const Center(
-                  child: Icon(LucideIcons.home, size: 64, color: Colors.black26),
-                ),
+                  ),
+              ],
+            )
+          : Container(
+              color: _placeholderColor(null),
+              child: const Center(
+                child: Icon(LucideIcons.home, size: 64, color: Colors.black26),
               ),
-      ),
+            ),
     );
   }
 
@@ -703,18 +717,27 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.all(8),
-        width: 36,
-        height: 36,
+        width: 44,
+        height: 44,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.85),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.black, width: 2),
-          boxShadow: const [
-            BoxShadow(color: Colors.black, offset: Offset(2, 2), blurRadius: 0, spreadRadius: -1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              spreadRadius: 2,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              spreadRadius: 0,
+              offset: const Offset(0, 1),
+            ),
           ],
         ),
-        child: Icon(icon, size: 18),
+        child: Icon(icon, size: 20, color: Colors.black87),
       ),
     );
   }

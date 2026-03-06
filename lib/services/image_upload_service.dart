@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;
@@ -70,12 +71,22 @@ class ImageUploadService {
       }
     }
 
-    // 2. Request presigned URL from API
+    // 2. Request presigned URL from API (requires Firebase auth token)
+    final token = await FirebaseAuth.instance.currentUser?.getIdToken();
+    if (token == null) {
+      debugPrint('ImageUpload: Not authenticated, cannot upload');
+      return null;
+    }
+
     final presignedResponse = await http.post(
       Uri.parse('$_apiBase/api/upload'),
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
       body: jsonEncode({
         'contentType': contentType,
+        'fileSize': imageBytes.length,
         'folder': folder,
         'id': listingId,
       }),

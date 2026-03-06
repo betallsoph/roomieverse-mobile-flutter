@@ -14,6 +14,7 @@ class RoommateHaveRoomBasic extends StatelessWidget {
   final TextEditingController addressController;
   final TextEditingController buildingController;
   final TextEditingController priceController;
+  final TextEditingController moveInController;
   final String? selectedCity;
   final String? selectedDistrict;
   final ValueChanged<String?> onCityChanged;
@@ -31,6 +32,7 @@ class RoommateHaveRoomBasic extends StatelessWidget {
     required this.addressController,
     required this.buildingController,
     required this.priceController,
+    required this.moveInController,
     this.selectedCity,
     this.selectedDistrict,
     required this.onCityChanged,
@@ -150,6 +152,13 @@ class RoommateHaveRoomBasic extends StatelessWidget {
             keyboardType: TextInputType.number,
             inputFormatters: [CurrencyInputFormatter()],
             suffix: 'VNĐ',
+          ),
+          const SizedBox(height: 14),
+
+          NeoBrutalTextField(
+            label: 'Thời gian có thể dọn vào',
+            hint: 'VD: Từ 15/03/2026 hoặc Linh hoạt',
+            controller: moveInController,
           ),
 
           const SizedBox(height: 24),

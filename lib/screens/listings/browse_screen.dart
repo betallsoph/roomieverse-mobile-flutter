@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -42,6 +43,70 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onPostTap(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      _showLoginPrompt(context);
+      return;
+    }
+    _showCategoryPicker(context);
+  }
+
+  void _showLoginPrompt(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.xl),
+          side: const BorderSide(color: Colors.black, width: 2),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppColors.orangeLight,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: const Icon(LucideIcons.logIn, size: 24),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Vui lòng đăng nhập',
+                style: TextStyle(
+                  fontFamily: 'Google Sans',
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Bạn cần đăng nhập để đăng tin.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 20),
+              NeoBrutalButton(
+                label: 'Đăng nhập ngay',
+                backgroundColor: AppColors.blueLight,
+                expanded: true,
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.push('/auth');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showCategoryPicker(BuildContext context) {
@@ -169,7 +234,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen>
                 ),
                 const SizedBox(width: 10),
                 GestureDetector(
-                  onTap: () => _showCategoryPicker(context),
+                  onTap: () => _onPostTap(context),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),

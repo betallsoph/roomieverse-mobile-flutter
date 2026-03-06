@@ -86,34 +86,36 @@ class _NeoBrutalButtonState extends State<NeoBrutalButton> {
         transform: _isPressed
             ? (Matrix4.identity()..translate(2.0, 2.0, 0.0))
             : Matrix4.identity(),
-        child: widget.isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textPrimary,
-                ),
-              )
-            : Row(
+        child: Row(
                 mainAxisSize:
                     widget.expanded ? MainAxisSize.max : MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (widget.icon != null) ...[
-                    Icon(widget.icon, size: 18, color: widget.textColor ?? AppColors.textPrimary),
-                    const SizedBox(width: 8),
-                  ],
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontFamily: 'Google Sans',
-                      fontSize: widget.fontSize ?? 14,
-                      fontWeight: FontWeight.w700,
-                      color: widget.textColor ?? AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+                children: widget.isLoading
+                    ? [
+                        const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ]
+                    : [
+                        if (widget.icon != null) ...[
+                          Icon(widget.icon, size: 18, color: widget.textColor ?? AppColors.textPrimary),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          widget.label,
+                          style: TextStyle(
+                            fontFamily: 'Google Sans',
+                            fontSize: widget.fontSize ?? 14,
+                            fontWeight: FontWeight.w700,
+                            color: widget.textColor ?? AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
               ),
       ),
     );

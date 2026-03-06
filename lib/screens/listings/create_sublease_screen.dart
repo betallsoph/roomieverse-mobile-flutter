@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../theme/app_theme.dart';
 import '../../theme/neo_brutal.dart';
 import '../../widgets/neo_brutal_dropdown.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/listing_provider.dart';
 import '../../data/constants.dart';
 import '../../utils/helpers.dart';
@@ -87,8 +87,12 @@ class _CreateSubleaseScreenState extends ConsumerState<CreateSubleaseScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final user = ref.read(authStateProvider).valueOrNull;
-      if (user == null) return;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        _showError('Vui lòng đăng nhập trước khi đăng tin');
+        if (mounted) context.push('/auth');
+        return;
+      }
 
       final location = [
         getDistrictLabel(_selectedCity, _selectedDistrict),
@@ -132,9 +136,11 @@ class _CreateSubleaseScreenState extends ConsumerState<CreateSubleaseScreen> {
 
       await ref.read(listingServiceProvider).createListing(data);
       ref.invalidate(listingsProvider);
+      ref.invalidate(listingsByCategoryProvider);
 
       if (mounted) _showSuccessDialog();
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('CreateSublease error: $e\n$stackTrace');
       _showError('Có lỗi xảy ra: $e');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
