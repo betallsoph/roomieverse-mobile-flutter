@@ -184,6 +184,8 @@ class ShimmerListingList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: count,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
@@ -199,6 +201,8 @@ class ShimmerPostList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       itemCount: count,
       separatorBuilder: (_, __) => const SizedBox(height: 12),

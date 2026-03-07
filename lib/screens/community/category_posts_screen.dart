@@ -126,7 +126,10 @@ class _CategoryPostsScreenState extends ConsumerState<CategoryPostsScreen> {
               },
             );
           },
-          loading: () => const SingleChildScrollView(child: ShimmerPostList()),
+          loading: () => const SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(),
+            child: ShimmerPostList(),
+          ),
           error: (e, _) => Center(child: Text('Lỗi: $e')),
         ),
       ),

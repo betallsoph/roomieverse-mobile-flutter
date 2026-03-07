@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/neo_brutal.dart';
 import '../../providers/auth_provider.dart';
 import '../../data/constants.dart';
+import '../../services/community_service.dart';
 import 'community_screen.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
@@ -33,18 +33,11 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     'blog': LucideIcons.bookOpen,
   };
 
-  static const _categoryColors = {
-    'tips': AppColors.blue,
-    'drama': AppColors.pink,
-    'review': AppColors.yellow,
-    'pass-do': AppColors.emerald,
-    'blog': AppColors.purple,
-  };
-
   @override
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory;
+    _titleController.addListener(() => setState(() {}));
   }
 
   @override
@@ -124,148 +117,235 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     );
   }
 
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Google Sans',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 15),
+            filled: true,
+            fillColor: Colors.grey[50],
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey[200]!),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.blueDark, width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
+        title: const Text('Viết bài mới'),
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft, size: 20),
+          icon: const Icon(LucideIcons.arrowLeft, size: 22),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Viết bài mới'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Category selection
             const Text(
-              'Thể loại *',
-              style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w700),
+              'Chọn thể loại *',
+              style: TextStyle(
+                fontFamily: 'Google Sans', 
+                fontSize: 16, 
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
-            const SizedBox(height: 10),
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              childAspectRatio: 2.2,
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
               children: communityCategories.map((cat) {
                 final isSelected = _selectedCategory == cat.$1;
-                return NeoBrutalCard(
-                  backgroundColor: isSelected
-                      ? (_categoryColors[cat.$1] ?? AppColors.blue).withValues(alpha: 0.4)
-                      : Colors.white,
+                return InkWell(
                   onTap: () => setState(() => _selectedCategory = cat.$1),
-                  padding: const EdgeInsets.all(10),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _categoryIcons[cat.$1] ?? LucideIcons.fileText,
-                        size: 18,
-                        color: Colors.black,
+                  borderRadius: BorderRadius.circular(100),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? AppColors.blueDark : Colors.white,
+                      borderRadius: BorderRadius.circular(100),
+                      border: Border.all(
+                        color: isSelected ? AppColors.blueDark : Colors.grey[300]!,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _categoryIcons[cat.$1] ?? LucideIcons.fileText,
+                          size: 16,
+                          color: isSelected ? Colors.white : AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
                           cat.$2,
                           style: TextStyle(
-                            fontFamily: 'Google Sans',
-                            fontSize: 13,
-                            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                            fontSize: 14,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
 
             // Title
-            NeoBrutalTextField(
+            _buildTextField(
               label: 'Tiêu đề *',
-              hint: 'Tiêu đề bài viết (tối thiểu 5 ký tự)',
+              hint: 'Tóm tắt nội dung bài viết...',
               controller: _titleController,
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '${_titleController.text.length}/150 ký tự',
-                style: const TextStyle(fontSize: 11, color: AppColors.textTertiary),
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    '${_titleController.text.length}/150',
+                    style: TextStyle(
+                      fontSize: 12, 
+                      color: _titleController.text.length > 150 ? Colors.red : AppColors.textTertiary,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
 
             // Content
-            NeoBrutalTextField(
-              label: 'Nội dung *',
-              hint: 'Viết nội dung bài viết (tối thiểu 20 ký tự)...',
+            _buildTextField(
+              label: 'Nội dung chi tiết *',
+              hint: 'Chia sẻ đầy đủ câu chuyện của bạn (tối thiểu 20 ký tự)...',
               controller: _contentController,
               maxLines: 8,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 24),
 
             // Conditional: Location
             if (_showLocation) ...[
-              NeoBrutalTextField(
-                label: 'Vị trí',
-                hint: 'Quận, thành phố...',
+              _buildTextField(
+                label: 'Khu vực / Khu phố',
+                hint: 'VD: Quận 7, Cầu Giấy...',
                 controller: _locationController,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 24),
             ],
 
             // Conditional: Price
             if (_showPrice) ...[
-              NeoBrutalTextField(
-                label: 'Giá',
-                hint: 'VD: 500.000 VNĐ',
+              _buildTextField(
+                label: 'Mức giá (VNĐ)',
+                hint: 'VD: 500.000',
                 controller: _priceController,
                 keyboardType: TextInputType.number,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 24),
             ],
 
             // Conditional: Rating
             if (_showRating) ...[
               const Text(
-                'Đánh giá',
-                style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w700),
+                'Chấm điểm',
+                style: TextStyle(fontFamily: 'Google Sans', fontSize: 14, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Row(
                 children: List.generate(5, (i) {
                   return GestureDetector(
                     onTap: () => setState(() => _rating = i + 1),
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 6),
+                      padding: const EdgeInsets.only(right: 8),
                       child: Icon(
-                        i < _rating ? LucideIcons.star : LucideIcons.star,
-                        size: 28,
-                        color: i < _rating ? AppColors.yellow : AppColors.gray,
+                        LucideIcons.star,
+                        size: 36,
+                        color: i < _rating ? Colors.amber : Colors.grey[200],
                       ),
                     ),
                   );
                 }),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 32),
             ],
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 12),
 
             // Submit
-            NeoBrutalButton(
-              label: 'Đăng bài',
-              backgroundColor: AppColors.emerald,
-              expanded: true,
-              isLoading: _isSubmitting,
-              onPressed: _isSubmitting ? null : _submit,
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: FilledButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.blueDark,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  elevation: 0,
+                ),
+                child: _isSubmitting
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text(
+                        'Đăng bài',
+                        style: TextStyle(
+                          fontFamily: 'Google Sans',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ),
             ),
+            const SizedBox(height: 48), // Bottom padding
           ],
         ),
       ),
