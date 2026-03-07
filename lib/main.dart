@@ -12,6 +12,7 @@ import 'screens/listings/create_listing_screen.dart';
 import 'screens/listings/create_short_term_screen.dart';
 import 'screens/listings/create_sublease_screen.dart';
 import 'screens/community/community_screen.dart';
+import 'screens/community/category_posts_screen.dart';
 import 'screens/community/post_detail_screen.dart';
 import 'screens/community/create_post_screen.dart';
 import 'screens/favorites/favorites_screen.dart';
@@ -69,6 +70,12 @@ final _router = GoRouter(
       ],
     ),
     // Full-screen routes (outside bottom nav shell)
+    GoRoute(
+      path: '/community/category/:id',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) =>
+          CategoryPostsScreen(categoryId: state.pathParameters['id']!),
+    ),
     GoRoute(
       path: '/listing/:id',
       parentNavigatorKey: _rootNavigatorKey,

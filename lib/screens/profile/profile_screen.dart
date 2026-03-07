@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../theme/app_theme.dart';
-import '../../theme/neo_brutal.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/listing_provider.dart';
 import '../../providers/favorites_provider.dart';
@@ -30,29 +29,33 @@ class ProfileScreen extends ConsumerWidget {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Hồ sơ',
-              style: TextStyle(
-                fontFamily: 'Google Sans',
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 0),
+              child: Text(
+                'Hồ sơ',
+                style: TextStyle(
+                  fontFamily: 'Google Sans',
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
-            const SizedBox(height: 20),
+            
+            const SizedBox(height: 24),
 
-            // Profile card
-            NeoBrutalCard(
-              backgroundColor: AppColors.backgroundBlue,
+            // Profile Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
                   CircleAvatar(
-                    radius: 32,
-                    backgroundColor: AppColors.backgroundBlue,
+                    radius: 36,
+                    backgroundColor: Colors.grey[200],
                     backgroundImage: user.photoURL != null
                         ? NetworkImage(user.photoURL!)
                         : null,
@@ -60,9 +63,9 @@ class ProfileScreen extends ConsumerWidget {
                         ? Text(
                             (user.displayName ?? user.email ?? '?')[0].toUpperCase(),
                             style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.black,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
                             ),
                           )
                         : null,
@@ -76,16 +79,17 @@ class ProfileScreen extends ConsumerWidget {
                           user.displayName ?? 'Người dùng',
                           style: const TextStyle(
                             fontFamily: 'Google Sans',
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: AppColors.textPrimary,
+                            letterSpacing: -0.5,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Text(
                           user.email ?? '',
                           style: const TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             color: AppColors.textTertiary,
                           ),
                         ),
@@ -96,27 +100,56 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
 
             // Profile details
             profileAsync.when(
               data: (profile) {
                 if (profile == null) {
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    child: NeoBrutalCard(
-                      backgroundColor: AppColors.yellowLight,
-                      child: Column(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                      ),
+                      child: Row(
                         children: [
-                          const Text(
-                            'Hoàn thành hồ sơ để tìm roommate phù hợp hơn!',
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Hoàn thành hồ sơ',
+                                  style: TextStyle(
+                                    fontFamily: 'Google Sans',
+                                    fontSize: 16, 
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.blueDark,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Để tìm roommate phù hợp hơn với bạn',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          NeoBrutalButton(
-                            label: 'Cập nhật hồ sơ',
-                            backgroundColor: AppColors.blueLight,
+                          const SizedBox(width: 16),
+                          FilledButton(
                             onPressed: () => context.push('/profile/edit'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.blueDark,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                            ),
+                            child: const Text('Cập nhật', style: TextStyle(fontWeight: FontWeight.w600)),
                           ),
                         ],
                       ),
@@ -129,7 +162,9 @@ class ProfileScreen extends ConsumerWidget {
               error: (_, __) => const SizedBox.shrink(),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
+            const SizedBox(height: 16),
 
             // Favorites preview
             allListingsAsync.when(
@@ -141,45 +176,62 @@ class ProfileScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Tin yêu thích',
-                          style: TextStyle(
-                            fontFamily: 'Google Sans',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.push('/favorites'),
-                          child: const Text(
-                            'Xem tất cả',
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Tin yêu thích',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.blueDark,
+                              fontFamily: 'Google Sans',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ...preview.map(
-                      (listing) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: SizedBox(
-                          height: 210,
-                          child: ListingCard(
-                            listing: listing,
-                            onTap: () =>
-                                context.push('/listing/${listing.id}'),
+                          TextButton(
+                            onPressed: () => context.push('/favorites'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.blueDark,
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Xem tất cả',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 220,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: preview.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 16),
+                        itemBuilder: (context, index) {
+                          final listing = preview[index];
+                          return SizedBox(
+                            width: 280,
+                            child: ListingCard(
+                              listing: listing,
+                              onTap: () => context.push('/listing/${listing.id}'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
                     const SizedBox(height: 16),
                   ],
                 );
@@ -196,47 +248,64 @@ class ProfileScreen extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Tin đã đăng',
-                          style: TextStyle(
-                            fontFamily: 'Google Sans',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => context.push('/profile/listings'),
-                          child: const Text(
-                            'Xem tất cả',
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Tin đã đăng',
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.blueDark,
+                              fontFamily: 'Google Sans',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ...preview.map(
-                      (listing) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: SizedBox(
-                          height: 210,
-                          child: ListingCard(
-                            listing: listing,
-                            showStatus: true,
-                            onTap: () =>
-                                context.push('/listing/${listing.id}'),
+                          TextButton(
+                            onPressed: () => context.push('/profile/listings'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppColors.blueDark,
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Xem tất cả',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 16),
+                    SizedBox(
+                      height: 220,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: preview.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 16),
+                        itemBuilder: (context, index) {
+                          final listing = preview[index];
+                          return SizedBox(
+                            width: 280,
+                            child: ListingCard(
+                              listing: listing,
+                              showStatus: true,
+                              onTap: () => context.push('/listing/${listing.id}'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Divider(height: 1, thickness: 1, color: Color(0xFFF0F0F0)),
+                    const SizedBox(height: 8),
                   ],
                 );
               },
@@ -246,36 +315,56 @@ class ProfileScreen extends ConsumerWidget {
 
             // Menu items
             _MenuItem(
+              icon: LucideIcons.user,
               label: 'Cập nhật hồ sơ',
               onTap: () => context.push('/profile/edit'),
             ),
             _MenuItem(
+              icon: LucideIcons.coffee,
               label: 'Hồ sơ lối sống',
               onTap: () => context.push('/profile/lifestyle'),
             ),
             _MenuItem(
+              icon: LucideIcons.heart,
               label: 'Yêu thích',
               onTap: () => context.push('/favorites'),
             ),
             _MenuItem(
+              icon: LucideIcons.list,
               label: 'Tin đã đăng',
               onTap: () => context.push('/profile/listings'),
             ),
             _MenuItem(
+              icon: LucideIcons.settings,
               label: 'Cài đặt',
               onTap: () => context.push('/settings'),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
 
-            NeoBrutalButton(
-              label: 'Đăng xuất',
-              backgroundColor: AppColors.red,
-              expanded: true,
-              onPressed: () async {
-                await ref.read(authServiceProvider).signOut();
-              },
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: OutlinedButton(
+                onPressed: () async {
+                  await ref.read(authServiceProvider).signOut();
+                },
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red[600],
+                  side: BorderSide(color: Colors.red[200]!, width: 1.5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  minimumSize: const Size(double.infinity, 52),
+                ),
+                child: const Text(
+                  'Đăng xuất',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
+            
+            const SizedBox(height: 32),
           ],
         ),
       ),
@@ -294,12 +383,20 @@ class _AuthPrompt extends StatelessWidget {
           children: [
             Image.asset('assets/images/logo1.png', height: 80),
             const SizedBox(height: 32),
-            NeoBrutalButton(
-              label: 'Đăng nhập / Đăng ký',
-              backgroundColor: AppColors.blueLight,
-              expanded: true,
-              fontSize: 16,
+            FilledButton(
               onPressed: () => context.push('/auth'),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.blueDark,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                minimumSize: const Size(double.infinity, 52),
+              ),
+              child: const Text(
+                'Đăng nhập / Đăng ký',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -318,7 +415,8 @@ class _ProfileDetails extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (profile.gender != null || profile.birthYear != null || profile.occupation != null)
-          NeoBrutalCard(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -326,22 +424,33 @@ class _ProfileDetails extends StatelessWidget {
                   'Thông tin cá nhân',
                   style: TextStyle(
                     fontFamily: 'Google Sans',
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 10),
-                if (profile.gender != null) _infoRow('Giới tính', profile.gender!),
-                if (profile.birthYear != null) _infoRow('Năm sinh', profile.birthYear!),
-                if (profile.occupation != null) _infoRow('Nghề nghiệp', profile.occupation!),
+                const SizedBox(height: 16),
+                Column(
+                  children: [
+                    if (profile.gender != null) _infoRow('Giới tính', profile.gender!),
+                    if (profile.gender != null && (profile.birthYear != null || profile.occupation != null)) const Divider(height: 24, color: Color(0xFFE5E7EB)),
+                    if (profile.birthYear != null) _infoRow('Năm sinh', profile.birthYear!),
+                    if (profile.birthYear != null && profile.occupation != null) const Divider(height: 24, color: Color(0xFFE5E7EB)),
+                    if (profile.occupation != null) _infoRow('Nghề nghiệp', profile.occupation!),
+                  ],
+                ),
               ],
             ),
           ),
-        if (profile.lifestyle != null) ...[
-          const SizedBox(height: 12),
-          NeoBrutalCard(
-            backgroundColor: AppColors.pinkLight,
+        
+        if (profile.lifestyle != null && 
+           ((profile.lifestyle!.schedule?.isNotEmpty ?? false) || 
+            (profile.lifestyle!.cleanliness?.isNotEmpty ?? false) || 
+            (profile.lifestyle!.habits?.isNotEmpty ?? false))) ...[
+          const SizedBox(height: 24),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -349,18 +458,34 @@ class _ProfileDetails extends StatelessWidget {
                   'Lối sống',
                   style: TextStyle(
                     fontFamily: 'Google Sans',
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
                   ),
                 ),
-                const SizedBox(height: 10),
-                if (profile.lifestyle!.schedule != null && profile.lifestyle!.schedule!.isNotEmpty)
-                  _chipRow('Lịch trình', profile.lifestyle!.schedule!),
-                if (profile.lifestyle!.cleanliness != null && profile.lifestyle!.cleanliness!.isNotEmpty)
-                  _chipRow('Sạch sẽ', profile.lifestyle!.cleanliness!),
-                if (profile.lifestyle!.habits != null && profile.lifestyle!.habits!.isNotEmpty)
-                  _chipRow('Thói quen', profile.lifestyle!.habits!),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (profile.lifestyle!.schedule != null && profile.lifestyle!.schedule!.isNotEmpty)
+                      _chipRow('Lịch trình', profile.lifestyle!.schedule!),
+                    
+                    if (profile.lifestyle!.schedule != null && profile.lifestyle!.schedule!.isNotEmpty && 
+                       ((profile.lifestyle!.cleanliness?.isNotEmpty ?? false) || (profile.lifestyle!.habits?.isNotEmpty ?? false)))
+                      const SizedBox(height: 20),
+
+                    if (profile.lifestyle!.cleanliness != null && profile.lifestyle!.cleanliness!.isNotEmpty)
+                      _chipRow('Sạch sẽ', profile.lifestyle!.cleanliness!),
+                    
+                    if (profile.lifestyle!.cleanliness != null && profile.lifestyle!.cleanliness!.isNotEmpty && 
+                       (profile.lifestyle!.habits?.isNotEmpty ?? false))
+                      const SizedBox(height: 20),
+
+                    if (profile.lifestyle!.habits != null && profile.lifestyle!.habits!.isNotEmpty)
+                      _chipRow('Thói quen', profile.lifestyle!.habits!),
+                  ],
+                ),
               ],
             ),
           ),
@@ -371,66 +496,79 @@ class _ProfileDetails extends StatelessWidget {
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 14, color: AppColors.textTertiary)),
-          const SizedBox(width: 12),
-          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
         ],
       ),
     );
   }
 
   Widget _chipRow(String label, List<String> values) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textTertiary)),
-          const SizedBox(height: 4),
-          Wrap(
-            spacing: 6,
-            runSpacing: 4,
-            children: values.map((v) => NeoBrutalChip(label: v, selected: true, selectedColor: AppColors.pinkLight)).toList(),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 13, color: AppColors.textTertiary)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: values.map((v) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border.all(color: Colors.grey[200]!),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Text(
+              v,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          )).toList(),
+        ),
+      ],
     );
   }
 }
 
 class _MenuItem extends StatelessWidget {
+  final IconData icon;
   final String label;
   final VoidCallback onTap;
 
   const _MenuItem({
+    required this.icon,
     required this.label,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 4),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Colors.black12)),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         child: Row(
           children: [
+            Icon(icon, size: 24, color: AppColors.textSecondary),
+            const SizedBox(width: 16),
             Text(
               label,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
             const Spacer(),
-            const Icon(LucideIcons.chevronRight, size: 18, color: AppColors.textTertiary),
+            const Icon(LucideIcons.chevronRight, size: 20, color: AppColors.textTertiary),
           ],
         ),
       ),
